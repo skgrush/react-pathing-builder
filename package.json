@@ -1,0 +1,9 @@
+{
+  "name": "react-pathing-builder",
+  "version": "0.0.1",
+  "description": "A React component for building pathing graphs on maps.",
+  "main": "index.js",
+  "repository": "https://github.com/skgrush/react-pathing-builder",
+  "author": "Samuel K. Grush",
+  "license": "MIT"
+}
