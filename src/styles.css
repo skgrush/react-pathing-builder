@@ -1,0 +1,7 @@
+div.pathing-builder {
+  background: beige;
+}
+
+div.pathing-builder > p {
+  color: teal;
+}

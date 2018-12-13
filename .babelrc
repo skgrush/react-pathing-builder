@@ -1,0 +1,17 @@
+{
+  "presets": [
+    "@babel/react",
+    "@babel/typescript",
+    ["@babel/env", {"modules": false}]
+  ],
+  "ignore": ["src/**/__tests__"],
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"],
+        "root": ["./src", "./examples/src"]
+      }
+    ]
+  ]
+}
