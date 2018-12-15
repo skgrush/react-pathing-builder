@@ -5,3 +5,8 @@ div.pathing-builder {
 div.pathing-builder > p {
   color: teal;
 }
+
+div.pathing-builder > canvas.pathing-builder-canvas {
+  padding: 0;
+  border-width: 0;
+}
