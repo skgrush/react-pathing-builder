@@ -15,7 +15,7 @@ yarn install
 ### Test / Develop
 
 ```shell
-yarn start:webpack
+yarn start
 ```
 
 Starts up a webpack dev server pointing at [examples/src](examples/src),
@@ -29,5 +29,5 @@ yarn build
 ```
 
 Transpiles and packs [src](src) into [lib/index.js](lib/index.js), builds
-a TypeScript declaration file at [lib/PathingBuilder.d.ts](lib/pathingbuilder.d.ts),
+a TypeScript declaration file at [lib/index.d.ts](lib/index.d.ts),
 and copies the css file.
