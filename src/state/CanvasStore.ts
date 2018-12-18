@@ -4,6 +4,7 @@ import {Shape, Star} from '../drawables'
 import {Pointed, CanvasStyleType} from '../interfaces'
 import {diffPointed} from '../utils'
 import {UniquenessError} from '../errors'
+import ChangeStore from './changes/ChangeStore'
 
 export type ClickModifier = 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'
 const CLICK_MODIFIERS = Object.freeze([
@@ -48,6 +49,7 @@ export default class CanvasStore {
   private dragoff: Pointed | null = null
   private selectedName: string | null = null
   private intervalID: number | null = null
+  readonly changelog: ChangeStore
 
   locationMap: Map<string, Location> = new Map()
   edgeMap: Map<string, Edge> = new Map()
@@ -69,6 +71,7 @@ export default class CanvasStore {
 
   constructor(params: Parameters & {canvas: HTMLCanvasElement}) {
     ;(window as any).canvasStore = this
+    this.changelog = new ChangeStore(this)
     this.canvas = params.canvas
     this.updateParams(params, true)
   }
@@ -115,7 +118,9 @@ export default class CanvasStore {
     }
     if (this.locationMap.has(loc.name))
       throw new UniquenessError(`Failed to add duplicate location ${loc.name}`)
+
     this.locationMap.set(loc.name, loc)
+    this.changelog.newAdd(loc)
     this.valid = false
   }
 
@@ -134,6 +139,7 @@ export default class CanvasStore {
 
     this.valid = false
     if (this.locationMap.delete(locName)) {
+      this.changelog.newRemove(loc)
       return true
     }
     console.warn(`Failed to remove location ${locName}; not in locationMap`)
@@ -152,6 +158,7 @@ export default class CanvasStore {
 
     const E = new Edge(start, end, this, weight)
     this.edgeMap.set(key, E)
+    this.changelog.newAdd(E)
     return E
   }
 
@@ -169,8 +176,10 @@ export default class CanvasStore {
     if (!E || !this.edgeMap.delete(edgeKey)) {
       console.warn(`failed to remove edge (${edgeKey}), not in edgeMap`)
       return false
+      // TODO: this is definitely not good for changelog state consistency
     }
 
+    this.changelog.newRemove(E)
     return true
   }
 
@@ -321,6 +330,7 @@ export default class CanvasStore {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         const {x, y} = selectedLoc
         this.dragoff = diffPointed(point, {x, y})
+        this.changelog.newGrab(selectedLoc, {x, y})
       }
     } else if (<any>selectedLoc instanceof Edge) {
       // selected an edge; that's not really an option yet though
@@ -331,7 +341,11 @@ export default class CanvasStore {
   }
 
   mouseUpHandler = (e: MouseEvent) => {
-    this.dragging = false
+    const {selection} = this
+    if (selection instanceof Location) {
+      const {x, y} = selection
+      this.changelog.newDrop(selection, {x, y})
+    }
     this.dragoff = null
     this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
   }
