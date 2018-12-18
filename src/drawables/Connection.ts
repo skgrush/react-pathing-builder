@@ -1,17 +1,30 @@
 import Drawable from './Drawable'
+import {CanvasStyleType} from '../interfaces'
 
 export interface ConnectionParams {
   start: Drawable
   end: Drawable
-  stroke?: string | CanvasGradient | CanvasPattern
+  stroke?: CanvasStyleType
   strokeWidth?: number
+}
+
+function avg(a: number, b: number) {
+  return (a + b) / 2
 }
 
 export default class Connection extends Drawable {
   readonly start: Drawable
   readonly end: Drawable
-  stroke: string | CanvasGradient | CanvasPattern = '#FFF'
-  strokeWidth: number = 1
+  stroke: CanvasStyleType = '#000'
+  strokeWidth: number = 3
+
+  get x() {
+    return avg(this.start.x, this.end.x)
+  }
+
+  get y() {
+    return avg(this.start.y, this.end.y)
+  }
 
   get width() {
     return Math.abs(this.start.x - this.end.x)
@@ -29,8 +42,8 @@ export default class Connection extends Drawable {
     super(
       Object.assign(
         {
-          x: Math.abs(params.start.x - params.end.x) / 2,
-          y: Math.abs(params.start.y - params.end.y) / 2,
+          x: avg(params.start.x, params.end.x),
+          y: avg(params.start.y, params.end.y),
         },
         params
       )
@@ -46,5 +59,6 @@ export default class Connection extends Drawable {
     ctx.lineWidth = this.strokeWidth
     ctx.moveTo(this.start.x, this.start.y)
     ctx.lineTo(this.end.x, this.end.y)
+    ctx.stroke()
   }
 }

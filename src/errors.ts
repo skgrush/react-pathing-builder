@@ -11,3 +11,10 @@ export class UniquenessError extends Error {
     Object.setPrototypeOf(this, new.target.prototype)
   }
 }
+
+export class ChangeError extends Error {
+  constructor(message?: string) {
+    super(message)
+    Object.setPrototypeOf(this, new.target.prototype)
+  }
+}

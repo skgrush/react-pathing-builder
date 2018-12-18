@@ -12,10 +12,11 @@ export interface LocationLike {
   neighborNames: Array<string | number>
 }
 
-export default class Location<T extends Shape> implements LocationLike {
+export default class Location<T extends Shape = Shape> implements LocationLike {
   name: string
   private _x: number
   private _y: number
+  data: LocationLike
   neighborNames: string[]
 
   shape: T
@@ -40,6 +41,7 @@ export default class Location<T extends Shape> implements LocationLike {
     this.name = String(data.name)
     this._x = +data.x
     this._y = +data.y
+    this.data = data
 
     this.neighborNames = data.neighborNames
       ? data.neighborNames.map(String)

@@ -77,7 +77,7 @@ class PathingBuilder extends React.Component<Props, State> {
     const canvas = this.canvas.current
     if (
       canvas &&
-      (!this.state.store || this.state.mapImg !== this.state.store.img)
+      (!this.state.store || this.state.mapImg !== this.state.store.mapImg)
     ) {
       this.initCanvas(canvas)
     }
