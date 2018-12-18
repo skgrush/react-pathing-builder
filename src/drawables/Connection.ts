@@ -1,15 +1,12 @@
 import Drawable from './Drawable'
 import {CanvasStyleType} from '../interfaces'
+import {numAvg, midPointed} from '../utils'
 
 export interface ConnectionParams {
   start: Drawable
   end: Drawable
   stroke?: CanvasStyleType
   strokeWidth?: number
-}
-
-function avg(a: number, b: number) {
-  return (a + b) / 2
 }
 
 export default class Connection extends Drawable {
@@ -19,11 +16,11 @@ export default class Connection extends Drawable {
   strokeWidth: number = 3
 
   get x() {
-    return avg(this.start.x, this.end.x)
+    return numAvg(this.start.x, this.end.x)
   }
 
   get y() {
-    return avg(this.start.y, this.end.y)
+    return numAvg(this.start.y, this.end.y)
   }
 
   get width() {
@@ -39,15 +36,7 @@ export default class Connection extends Drawable {
   }
 
   constructor(params: ConnectionParams) {
-    super(
-      Object.assign(
-        {
-          x: avg(params.start.x, params.end.x),
-          y: avg(params.start.y, params.end.y),
-        },
-        params
-      )
-    )
+    super(Object.assign(midPointed(params.start, params.end), params))
 
     this.start = params.start
     this.end = params.end

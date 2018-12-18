@@ -32,6 +32,9 @@ export default abstract class Drawable {
     this.y = y
   }
 
+  /**
+   * Calculate if a point lies within the bounding-box of a Drawable.
+   */
   contains = ({x, y}: Pointed) => {
     console.debug('dis:', this)
     console.debug({x: this.x, y: this.y}, 'contains:', {x, y}, 'diff:', [

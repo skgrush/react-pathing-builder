@@ -2,6 +2,7 @@ import Location from './Location'
 import Edge, {getEdgeKey} from './Edge'
 import {Shape, Star} from '../drawables'
 import {Pointed, CanvasStyleType} from '../interfaces'
+import {diffPointed} from '../utils'
 import {UniquenessError} from '../errors'
 
 export type ClickModifier = 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'
@@ -12,6 +13,11 @@ const CLICK_MODIFIERS = Object.freeze([
   'shiftKey',
 ] as ClickModifier[])
 
+/**
+ * The arguments and modifiable-properties of CanvasStore.
+ * Can be passed to the constructor or updateParams().
+ * See the associated properties on CanvasStore for descriptions.
+ */
 interface Parameters {
   img?: HTMLImageElement | null
   canvas?: HTMLCanvasElement
@@ -23,18 +29,25 @@ interface Parameters {
 }
 
 export default class CanvasStore {
+  /** the map image to base the coordinate system on */
   private img: HTMLImageElement | null = null
+  /** the actual canvas to draw on */
   private canvas: HTMLCanvasElement
+  /** milliseconds between redraw frame requests */
   private refreshInterval: number = Math.floor(1000 / 15)
+  /** offset of the canvas, i.e. left/top padding + border */
   private pixelOffset: Pointed | null = null
+  /** multiplier for determining stroke-width from weight for Edges */
+  private weightScaleMult: number = 1
+  /** mouse modifier for adding an Edge */
+  private addMod: ClickModifier = 'shiftKey'
+  /** highlight color/style of selected Locations or Edges */
+  private selectionStroke: CanvasStyleType = '#C00'
+
   private valid: boolean = false
-  private dragging: boolean = false
   private dragoff: Pointed | null = null
   private selectedName: string | null = null
   private intervalID: number | null = null
-  private weightScaleMult: number = 1
-  private addMod: ClickModifier = 'shiftKey'
-  private selectionStroke: CanvasStyleType = '#C00'
 
   locationMap: Map<string, Location> = new Map()
   edgeMap: Map<string, Edge> = new Map()
@@ -119,7 +132,12 @@ export default class CanvasStore {
       this.removeEdge(loc, neighbor)
     }
 
-    return this.locationMap.delete(locName)
+    this.valid = false
+    if (this.locationMap.delete(locName)) {
+      return true
+    }
+    console.warn(`Failed to remove location ${locName}; not in locationMap`)
+    return false
   }
 
   createEdge = (start: Location, end: Location, weight?: number) => {
@@ -147,14 +165,16 @@ export default class CanvasStore {
     }
     start.neighborNames.splice(startNNidx, 1)
     end.neighborNames.splice(endNNidx, 1)
-    if (!this.edgeMap.delete(edgeKey)) {
+    const E = this.edgeMap.get(edgeKey)
+    if (!E || !this.edgeMap.delete(edgeKey)) {
       console.warn(`failed to remove edge (${edgeKey}), not in edgeMap`)
       return false
     }
+
     return true
   }
 
-  setImg = (mapImg: HTMLImageElement | null) => {
+  private setImg = (mapImg: HTMLImageElement | null) => {
     if (mapImg !== this.img) {
       if (mapImg)
         console.debug(`updating image; src ${mapImg.src ? 'is' : 'not'} loaded`)
@@ -181,7 +201,7 @@ export default class CanvasStore {
     return null
   }
 
-  prepCanvas = () => {
+  private prepCanvas = () => {
     console.debug('prepCanvas')
     // add all our event listeners
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
@@ -193,12 +213,12 @@ export default class CanvasStore {
     this.valid = false
   }
 
-  clear = (ctx: CanvasRenderingContext2D | null = null) => {
+  private clear = (ctx: CanvasRenderingContext2D | null = null) => {
     if (!ctx) ctx = this.canvas.getContext('2d')
     if (ctx) ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
 
-  draw = () => {
+  private draw = () => {
     if (!this.valid) {
       requestAnimationFrame(this._draw)
       this.valid = true
@@ -298,15 +318,12 @@ export default class CanvasStore {
         const edge = this.createEdge(prevSelected, selectedLoc)
         this.selectedName = edge.key
       } else {
-        this.dragging = true
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
-        this.dragoff = {
-          x: point.x - selectedLoc.x,
-          y: point.y - selectedLoc.y,
-        }
+        const {x, y} = selectedLoc
+        this.dragoff = diffPointed(point, {x, y})
       }
     } else if (<any>selectedLoc instanceof Edge) {
-      // selected an edge
+      // selected an edge; that's not really an option yet though
     } else if (this.selectedName) {
       this.valid = false
       this.selectedName = null
@@ -327,13 +344,17 @@ export default class CanvasStore {
      */
     if (this.valid && this.dragoff && this.selection instanceof Location) {
       const point = this._findMouse(e)
-      this.selection.x = point.x - this.dragoff.x
-      this.selection.y = point.y - this.dragoff.y
+
+      diffPointed(point, this.dragoff, this.selection)
       this.valid = false
     }
   }
 
-  _findMouse = (e: MouseEvent): Pointed => {
+  /**
+   * Find the coordinates of the mouse relative to the canvas.
+   *
+   */
+  private _findMouse = (e: MouseEvent): Pointed => {
     const {currentTarget, pageX, pageY} = e
     var element = currentTarget as HTMLElement | null,
       offsetX = 0,
