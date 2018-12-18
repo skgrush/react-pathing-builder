@@ -5,10 +5,28 @@ import Change, {ActionType} from './change'
 import {ChangeError} from '../../errors'
 import {Pointed} from '../../interfaces'
 
+/** create a new Change in the opposite type of Change from the input */
+function flipChange(C: Change) {
+  const ts = Date.now()
+  let {action, target, property, oldValue, newValue} = C
+
+  if (action === 'add') action = 'remove'
+  else if (action === 'remove') action = 'add'
+  else if (action === 'grab') action = 'drop'
+  else if (action === 'drop') action = 'grab'
+
+  // flip newValue and oldValue
+  return new Change(action, ts, target, property, newValue, oldValue)
+}
+
 export default class ChangeStore {
+  /** stack of registered changes, never events on top */
   private readonly sequenceStack: Array<Change> = []
-  private readonly undoneStack: Array<Change> = []
+  /** stack of undone changes, ready to be redo-ne */
+  private readonly redoStack: Array<Change> = []
+  /** reference back to the parent CanvasStore instance */
   readonly canvasStore: CanvasStore
+  /** counter for preventing undo's from adding new changes */
   private ignoreNext: number = 0
 
   constructor(canvasStore: CanvasStore) {
@@ -59,7 +77,7 @@ export default class ChangeStore {
   ) => {
     const C = new Change(action, ts, target, property, oldValue, newValue)
     if (this.ignoreNext <= 0) {
-      this.undoneStack.length = 0 // remove undo stack when new change happens
+      this.redoStack.length = 0 // remove undo stack when new change happens
       this.sequenceStack.push(C)
       this.ignoreNext = 0
     } else {
@@ -67,12 +85,39 @@ export default class ChangeStore {
     }
   }
 
+  redo = () => {
+    const C = this.redoStack.pop()
+    if (!C) {
+      console.debug('Empty redo stack')
+      return false
+    }
+
+    if (C.action !== 'grab') {
+      this.sequenceStack.push(C)
+      return this._undo(flipChange(C))
+    }
+
+    const C2 = this.redoStack.pop()
+    if (!C2 || C2.action !== 'drop') {
+      console.error('Change Error on:', C)
+      if (C2) this.redoStack.push(C2)
+      throw new ChangeError('Missing corresponding drop for grab redo')
+    }
+    this.sequenceStack.push(C, C2)
+    return this._undoGrab(flipChange(C2))
+  }
+
   undo = () => {
     const C = this.sequenceStack.pop()
     if (!C) {
-      throw new ChangeError('Failed to undo: empty sequenceStack')
+      console.debug('Empty undo stack')
+      return false
     }
-    this.undoneStack.push(C)
+    this.redoStack.push(C)
+    return this._undo(C)
+  }
+
+  private _undo = (C: Change) => {
     switch (C.action) {
       case 'add':
         return this._undoAdd(C)
@@ -91,25 +136,32 @@ export default class ChangeStore {
   }
 
   private _undoAdd = (C: Change) => {
+    const prevIgnoreNext = this.ignoreNext
+    let ret
     if (C.target instanceof Location) {
       this.ignoreNext += C.target.neighborNames.length + 1
-      return this.canvasStore.removeLoc(C.target.name) !== false
+      ret = this.canvasStore.removeLoc(C.target.name)
     } else if (C.target instanceof Edge) {
       this.ignoreNext += 1
-      return this.canvasStore.removeEdge(C.target.start, C.target.end)
+      ret = this.canvasStore.removeEdge(C.target.start, C.target.end)
     } else {
       console.error('Change Error on:', C)
       throw new ChangeError('Unexpected change target to _undoAdd()')
     }
+
+    if (!ret) this.ignoreNext = prevIgnoreNext
+    return ret
   }
 
   private _undoRemove = (C: Change) => {
+    const prevIgnoreNext = this.ignoreNext
+    let ret
     if (C.target instanceof Location) {
       this.ignoreNext += 1
-      return this.canvasStore.addLoc(C.target)
+      ret = this.canvasStore.addLoc(C.target)
     } else if (C.target instanceof Edge) {
       this.ignoreNext += 1
-      return this.canvasStore.createEdge(
+      ret = this.canvasStore.createEdge(
         C.target.start,
         C.target.end,
         C.target.weight
@@ -118,6 +170,9 @@ export default class ChangeStore {
       console.error('Change Error on:', C)
       throw new ChangeError('Unexpected change target to _undoRemove()')
     }
+
+    if (!ret) this.ignoreNext = prevIgnoreNext
+    return ret
   }
 
   private _undoMutate = (C: Change) => {
@@ -163,20 +218,24 @@ export default class ChangeStore {
       throw new ChangeError('Unexpected values on _undoGrab() object')
     }
     const {x, y} = C.oldValue as Pointed
-    return Object.assign(C.target, {x, y})
+    Object.assign(C.target, {x, y})
+    return true
+    // TODO: is there anything to check against that I missed?
   }
 
-  private _undoDrop = (C: Change) => {
+  private _undoDrop = (C: Change): boolean => {
     if (!(C.target instanceof Location)) {
       console.error('Change Error on:', C)
       throw new ChangeError('Unexpected non-Location _undoGrab() target')
     }
-    const C_grab = this.sequenceStack[this.sequenceStack.length - 1]
+    const C_grab = this.sequenceStack.pop()
     if (!C_grab || C_grab.action !== 'grab' || C.target !== C_grab.target) {
+      if (C_grab) this.sequenceStack.push(C_grab) // whoops reverse it
       console.error('Change Error on:', C, C_grab)
       throw new ChangeError('Unexpected lack of corresponding grab for drop')
     }
     // last action confirmed to be corresponding grab; now undo it
-    this.undo()
+    this.redoStack.push(C_grab)
+    return this._undo(C_grab)
   }
 }

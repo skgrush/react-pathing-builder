@@ -122,6 +122,7 @@ export default class CanvasStore {
     this.locationMap.set(loc.name, loc)
     this.changelog.newAdd(loc)
     this.valid = false
+    return true
   }
 
   removeLoc = (locName: string) => {
@@ -153,13 +154,13 @@ export default class CanvasStore {
       end.neighborNames.push(start.name)
 
     const key = getEdgeKey(start, end)
-    const existingEdge = this.edgeMap.get(key)
-    if (existingEdge) return existingEdge
+    if (this.edgeMap.has(key)) return false
 
     const E = new Edge(start, end, this, weight)
     this.edgeMap.set(key, E)
     this.changelog.newAdd(E)
-    return E
+    this.valid = false
+    return true
   }
 
   removeEdge = (start: Location, end: Location) => {
@@ -180,6 +181,7 @@ export default class CanvasStore {
     }
 
     this.changelog.newRemove(E)
+    this.valid = false
     return true
   }
 
@@ -324,8 +326,9 @@ export default class CanvasStore {
         e[this.addMod]
       ) {
         // linking between two locations; either create one or select it
-        const edge = this.createEdge(prevSelected, selectedLoc)
-        this.selectedName = edge.key
+        const key = getEdgeKey(prevSelected, selectedLoc)
+        if (this.edgeMap.has(key) || this.createEdge(prevSelected, selectedLoc))
+          this.selectedName = key
       } else {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         const {x, y} = selectedLoc
