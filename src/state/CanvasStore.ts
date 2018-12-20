@@ -76,6 +76,13 @@ export default class CanvasStore {
     this.updateParams(params, true)
   }
 
+  /**
+   * Public interface for requesting redraw
+   */
+  redraw = () => {
+    if (this.valid) this.valid = false
+  }
+
   loadData = (data: any) => {
     // TODO
     throw 'loadData not implemented'

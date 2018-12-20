@@ -33,6 +33,13 @@ export function addPointed(
 }
 
 /**
+ * Check if two points are at equal coordinates
+ */
+export function equalPointed(a: Pointed, b: Pointed) {
+  return a.x === b.x && a.y === b.y
+}
+
+/**
  * Find the midpoint of two points and assign it to a third (optional) point.
  */
 export function midPointed(

@@ -12,6 +12,9 @@ export interface LocationLike {
   neighborNames: Array<string | number>
 }
 
+export type LocationMutablePropName = 'name' | 'shape'
+export type LocationMutablePropType = string | Shape
+
 export default class Location<T extends Shape = Shape> implements LocationLike {
   name: string
   private _x: number

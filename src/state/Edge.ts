@@ -2,6 +2,9 @@ import Location from './Location'
 import CanvasStore from './CanvasStore'
 import {Connection} from '../drawables'
 
+export type EdgeMutablePropName = 'weight'
+export type EdgeMutablePropType = number
+
 export function getEdgeKey(start: Location, end: Location) {
   return [start.name, end.name].sort().join('\t')
 }
