@@ -29,6 +29,11 @@ interface Parameters {
   selectionStroke?: CanvasStyleType
 }
 
+interface ConstructorParameters extends Parameters {
+  canvas: HTMLCanvasElement
+  updateReact: (cb?: () => void) => void
+}
+
 export default class CanvasStore {
   /** the map image to base the coordinate system on */
   private img: HTMLImageElement | null = null
@@ -69,9 +74,9 @@ export default class CanvasStore {
     return this.weightScaleMult
   }
 
-  constructor(params: Parameters & {canvas: HTMLCanvasElement}) {
+  constructor(params: ConstructorParameters) {
     ;(window as any).canvasStore = this
-    this.changelog = new ChangeStore(this)
+    this.changelog = new ChangeStore(this, params.updateReact)
     this.canvas = params.canvas
     this.updateParams(params, true)
   }

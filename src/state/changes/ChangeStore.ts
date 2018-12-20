@@ -2,8 +2,6 @@ import CanvasStore from '../CanvasStore'
 import Location, {LocationMutablePropName} from '../Location'
 import Edge, {EdgeMutablePropName} from '../Edge'
 import Change, {
-  ActionType,
-  ChangeLike,
   ChangeSubclass,
   ChangeAdd,
   ChangeRemove,
@@ -25,6 +23,8 @@ export default class ChangeStore {
   readonly canvasStore: CanvasStore
   /** counter for preventing undo's from adding new changes */
   private ignoreNext: number = 0
+  /** external callback to update react parent */
+  readonly updateReact: (cb?: () => void) => void
 
   get undoSize() {
     return this.sequenceStack.length
@@ -34,8 +34,12 @@ export default class ChangeStore {
     return this.redoStack.length
   }
 
-  constructor(canvasStore: CanvasStore) {
+  constructor(
+    canvasStore: CanvasStore,
+    updateReact: (cb?: () => void) => void
+  ) {
     this.canvasStore = canvasStore
+    this.updateReact = updateReact
   }
 
   /**
@@ -115,6 +119,7 @@ export default class ChangeStore {
     if (this.ignoreNext <= 0) {
       this.redoStack.length = 0 // remove undo stack when new change happens
       this.sequenceStack.push(C)
+      this.updateReact()
       this.ignoreNext = 0
     } else {
       this.ignoreNext -= 1
@@ -154,6 +159,7 @@ export default class ChangeStore {
   }
 
   private _undo = (C: ChangeSubclass) => {
+    this.updateReact()
     switch (C.action) {
       case 'add':
         return this._undoAdd(C)

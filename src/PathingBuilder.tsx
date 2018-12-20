@@ -1,6 +1,7 @@
 import * as React from 'react'
 
-import {Pointed} from './interfaces'
+import {Pointed, StateButtonBoxProps} from './interfaces'
+import {StateButtonBox} from './components'
 import CanvasStore from './state/CanvasStore'
 import {loadMapSrc, fitBoxInBox} from './utils'
 
@@ -12,6 +13,7 @@ interface Props {
   boundingHeight?: number
   pixelOffset?: Pointed
   className?: string
+  stateButtonBoxComponent?: React.ComponentClass<StateButtonBoxProps>
 }
 
 interface LoadedState {
@@ -21,6 +23,7 @@ interface LoadedState {
   height: number
   className: string
   canvasClassName: string
+  stateButtonBox: React.ComponentClass<StateButtonBoxProps>
 }
 interface NotLoadedState {
   store: null
@@ -29,9 +32,17 @@ interface NotLoadedState {
   height: null
   className: string
   canvasClassName: string
+  stateButtonBox: React.ComponentClass<StateButtonBoxProps>
 }
 
 type State = LoadedState | NotLoadedState
+
+const FakeChangelog = Object.freeze({
+  undo: () => false,
+  redo: () => false,
+  undoSize: 0,
+  redoSize: 0,
+})
 
 class PathingBuilder extends React.Component<Props, State> {
   canvas: React.RefObject<HTMLCanvasElement>
@@ -47,6 +58,7 @@ class PathingBuilder extends React.Component<Props, State> {
       height: null,
       className: classNames.join(' '),
       canvasClassName: PathingBuilder._makeCanvasClassNames(classNames),
+      stateButtonBox: props.stateButtonBoxComponent || StateButtonBox,
     }
     this.canvas = React.createRef()
   }
@@ -63,16 +75,20 @@ class PathingBuilder extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (prevProps.className !== this.props.className)
-      this.setState(PathingBuilder._updateClassNames(this.props.className))
+    if (
+      prevProps.className !== this.props.className ||
+      this.props.stateButtonBoxComponent !== prevProps.stateButtonBoxComponent
+    )
+      this.setState({
+        stateButtonBox: this.props.stateButtonBoxComponent || StateButtonBox,
+        ...PathingBuilder._updateClassNames(this.props.className),
+      })
 
     if (prevProps.mapSrc !== this.props.mapSrc) {
       if (this.props.mapSrc)
         loadMapSrc(this.props.mapSrc).then(this.updateWithNewMap)
       else this.updateWithNewMap(null)
     }
-
-    console.debug('didUpdate:', this.state.mapImg && this.state.mapImg.src)
 
     const canvas = this.canvas.current
     if (
@@ -119,11 +135,17 @@ class PathingBuilder extends React.Component<Props, State> {
         canvas,
         pixelOffset: this.props.pixelOffset,
         img: this.state.mapImg,
+        updateReact: this.updateReact,
       })
       this.setState({store})
     } else {
       store.updateParams({img: this.state.mapImg})
     }
+  }
+
+  updateReact = (callback?: () => void) => {
+    console.info('updateReact')
+    this.forceUpdate(callback)
   }
 
   /**
@@ -146,6 +168,10 @@ class PathingBuilder extends React.Component<Props, State> {
     }
   }
 
+  get changelog() {
+    return (this.state.store && this.state.store.changelog) || FakeChangelog
+  }
+
   render() {
     const {mapImg} = this.state
     if (!mapImg) {
@@ -158,6 +184,12 @@ class PathingBuilder extends React.Component<Props, State> {
 
     return (
       <div {...this.passProps} className={this.state.className}>
+        <this.state.stateButtonBox
+          onClickUndo={this.changelog.undo}
+          onClickRedo={this.changelog.redo}
+          undoCount={this.changelog.undoSize}
+          redoCount={this.changelog.redoSize}
+        />
         <canvas
           ref={this.canvas}
           className={this.state.canvasClassName}
