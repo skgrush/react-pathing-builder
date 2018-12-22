@@ -1,6 +1,11 @@
 import Drawable from './Drawable'
-import {CanvasStyleType} from '../interfaces'
-import {numAvg, midPointed} from '../utils'
+import {CanvasStyleType, Pointed} from '../interfaces'
+import {
+  numAvg,
+  midPointed,
+  euclideanDistance,
+  perpendicularDistance,
+} from '../utils'
 
 export interface ConnectionParams {
   start: Drawable
@@ -32,7 +37,7 @@ export default class Connection extends Drawable {
   }
 
   get length() {
-    return Math.sqrt(this.width ** 2 + this.height ** 2)
+    return euclideanDistance(this.start, this.end)
   }
 
   constructor(params: ConnectionParams) {
@@ -42,12 +47,29 @@ export default class Connection extends Drawable {
     this.end = params.end
   }
 
-  draw = (ctx: CanvasRenderingContext2D) => {
+  draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
     ctx.strokeStyle = this.stroke
     ctx.lineWidth = this.strokeWidth
     ctx.moveTo(this.start.x, this.start.y)
     ctx.lineTo(this.end.x, this.end.y)
     ctx.stroke()
+  }
+
+  /**
+   * Calculate if a point lies within the VISIBLE bounds of the Connection.
+   *
+   * Connection containment checking differs from normal Drawable calculation;
+   * we need to take into account the strokeWidth as the width. The imperfect
+   * heuristic checks if (1) the point is within the conventional
+   * bounding box and (2) if the perpendicular distance is less than the
+   * stroke width. There are no false positives, but there are small regions
+   * of false negatives outside the bounding box at the vertices.
+   */
+  contains(point: Pointed) {
+    return (
+      Drawable.prototype.contains.call(this, point) &&
+      perpendicularDistance(this.start, this.end, point) < this.strokeWidth / 2
+    )
   }
 }

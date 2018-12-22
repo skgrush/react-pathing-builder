@@ -6,6 +6,10 @@ export function numAvg(a: number, b: number) {
 
 /**
  * Find the sum of two points and assign it to a third (optional) point.
+ *
+ * @examples
+ *    A - B    =>  diffPointed(A, B)
+ *  C = A - B  =>  diffPointed(A, B, C)
  */
 export function diffPointed(
   a: Pointed,
@@ -20,6 +24,10 @@ export function diffPointed(
 
 /**
  * Find the difference of two points and assign it to a third (optional) point.
+ *
+ * @examples
+ *    A + B    =>  addPointed(A, B)
+ *  C = A + B  =>  addPointed(A, B, C)
  */
 export function addPointed(
   a: Pointed,
@@ -52,3 +60,44 @@ export function midPointed(
     y: numAvg(a.y, b.y),
   })
 }
+
+/**
+ * Dot product of Point-like x,y pairs.
+ */
+export function dotPointed(
+  a: Pointed,
+  b: Pointed,
+  assignTo: Pointed = {} as any
+) {
+  return Object.assign(assignTo, {
+    x: a.x * b.x,
+    y: a.y * b.y,
+  })
+}
+
+/**
+ * Distance calculation of a straight line.
+ */
+export function euclideanDistance(P: Pointed, Q: Pointed) {
+  // find the coordinate-difference
+  const val = diffPointed(P, Q)
+  // square the differences
+  dotPointed(val, val, val)
+  // root-sum of square differences
+  return Math.sqrt(val.x + val.y)
+}
+
+/**
+ * Distance between a point `P` and a line defined by points `L1` and `L2`.
+ */
+export function perpendicularDistance(L1: Pointed, L2: Pointed, P: Pointed) {
+  const Ldiff = diffPointed(L2, L1)
+  return (
+    Math.abs(Ldiff.y * P.x - Ldiff.x * P.y + L2.x * L1.y - L2.y * L1.x) /
+    euclideanDistance(L2, L1)
+  )
+}
+
+Object.assign(window, {
+  perpendicularDistance,
+})

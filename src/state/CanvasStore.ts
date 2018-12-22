@@ -65,15 +65,26 @@ export default class CanvasStore {
   /** Resolve shape class from a Location */
   locShapeGetter: LocationShaper = CanvasStore.defaultLocShaper
 
+  /** @section {drawing state variables} */
+  /** Canvas validity; `false` indicates a redraw is needed. */
   private valid: boolean = false
+  /** Drag Offset between mouse and thing; indicates dragging is happening. */
   private dragoff: Pointed | null = null
+  /** Name of selected Location or Edge, else null. */
   private selectedName: string | null = null
+  /** ID from setInterval in prepCanvas() */
   private intervalID: number | null = null
+  /** Log of changes to the state; implements undo/redo */
   readonly changelog: ChangeStore
 
-  locationMap: Map<string, Location> = new Map()
-  edgeMap: Map<string, Edge> = new Map()
+  /** map currently-added Location-names to Locations. */
+  private readonly locationMap: Map<string, Location> = new Map()
+  /** map currently-added Edge-keys to Edges. */
+  private readonly edgeMap: Map<string, Edge> = new Map()
 
+  /**
+   * The currently-selected Location or edge, based on `this.selectedName`.
+   */
   get selection() {
     if (!this.selectedName) return null
     if (this.selectedName.includes('\t'))
@@ -108,6 +119,12 @@ export default class CanvasStore {
     throw 'loadData not implemented'
   }
 
+  /**
+   * Public parameter updater.
+   *
+   * @param {Parameters} params - new partial parameters
+   * @param {boolean} [first=false] - if true, force prepping canvas
+   */
   updateParams = (params: Parameters, first?: boolean) => {
     console.debug('updateParams', params)
     const {img, pixelOffset, canvas, refreshInterval, selectionStroke} = params
@@ -261,6 +278,16 @@ export default class CanvasStore {
     return null
   }
 
+  /**
+   * Find the first Edge at the provided point, or null.
+   */
+  getFirstEdgeAt = (point: Pointed) => {
+    for (const edge of this.edgeMap.values()) {
+      if (edge.connection.contains(point)) return edge
+    }
+    return null
+  }
+
   private prepCanvas = () => {
     console.debug('prepCanvas')
     const ctx = this.canvas.getContext('2d')
@@ -367,7 +394,9 @@ export default class CanvasStore {
   mouseDownHandler = (e: MouseEvent) => {
     const prevSelected = this.selection
     const point = this._findMouse(e)
-    const selectedLoc = this.getFirstLocationAt(point)
+    const selectedLoc =
+      this.getFirstLocationAt(point) || this.getFirstEdgeAt(point)
+
     console.debug('prevSelected:', prevSelected, 'selected:', selectedLoc)
     const isAddMod = e[this.addMod]
 
@@ -395,8 +424,11 @@ export default class CanvasStore {
         this.dragoff = diffPointed(point, {x, y})
         this.changelog.newGrab(selectedLoc, {x, y})
       }
-    } else if (<any>selectedLoc instanceof Edge) {
+    } else if (selectedLoc instanceof Edge) {
       // selected an edge; that's not really an option yet though
+      console.debug('AN EDGE', selectedLoc)
+      this.valid = false
+      this.selectedName = selectedLoc.key
     } else if (prevSelected instanceof Location && !selectedLoc && isAddMod) {
       // Add-Modifier is held and prevSelected, create a Location and Edge
       const newLoc = this.createLocAtMouse(point)

@@ -1,5 +1,8 @@
 const CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/'
 
+/**
+ * Convert a number to a base64 string.
+ */
 export function base64(V: number, rest = ''): string {
   const mod = V % 64,
     remaining = Math.floor(V / 64)

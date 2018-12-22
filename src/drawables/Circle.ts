@@ -1,6 +1,7 @@
 import Shape, {ShapeParams} from './Shape'
 import {GeometryError} from '../errors'
 import {Pointed} from '../interfaces'
+import {euclideanDistance} from '../utils'
 
 export interface CircleParams extends ShapeParams {
   radius: number
@@ -43,7 +44,7 @@ export default class Circle<
     }
   }
 
-  contains = ({x, y}: Pointed) => {
-    return Math.sqrt((this.x - x) ** 2 + (this.y - y) ** 2) <= this.radius
+  contains = (point: Pointed) => {
+    return euclideanDistance(this, point) <= this.radius
   }
 }
