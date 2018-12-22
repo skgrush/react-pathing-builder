@@ -6,8 +6,9 @@ import {
   CanvasStyleType,
   LocationStyler,
   LocationShaper,
+  LabelStyler,
 } from '../interfaces'
-import {diffPointed} from '../utils'
+import {diffPointed, base64} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
 import {ShapeParams} from '../drawables/Shape'
@@ -57,6 +58,8 @@ export default class CanvasStore {
   private addMod: ClickModifier = 'shiftKey'
   /** highlight color/style of selected Locations or Edges */
   private selectionStroke: CanvasStyleType = '#C00'
+  /** Resolve label style from a Location */
+  labelStyleGetter: LabelStyler = CanvasStore.defaultLabelStyler
   /** Resolve shape style from a Location */
   locStyleGetter: LocationStyler = CanvasStore.defaultLocStyler
   /** Resolve shape class from a Location */
@@ -260,6 +263,12 @@ export default class CanvasStore {
 
   private prepCanvas = () => {
     console.debug('prepCanvas')
+    const ctx = this.canvas.getContext('2d')
+    if (ctx) {
+      ctx.font = 'Courier New 10pt'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+    }
     // add all our event listeners
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
     this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
@@ -307,21 +316,10 @@ export default class CanvasStore {
   }
 
   private _drawLoc(ctx: CanvasRenderingContext2D, loc: Location) {
-    if (loc === this.selection) {
-      const {stroke, strokeWidth} = loc.shape
-      // temporarily change selected stroke
-      loc.shape.stroke = this.selectionStroke
-      loc.shape.strokeWidth = 2
-      try {
-        // draw it
-        loc.shape.draw(ctx)
-      } finally {
-        // reset stroke
-        loc.shape.stroke = stroke
-        loc.shape.strokeWidth = strokeWidth
-      }
+    if (this.selectionStroke && this.selection === loc) {
+      loc.draw(ctx, this.selectionStroke)
     } else {
-      loc.shape.draw(ctx)
+      loc.draw(ctx)
     }
   }
 
@@ -347,7 +345,7 @@ export default class CanvasStore {
   }
 
   createLocAtMouse = (point: Pointed, select = true) => {
-    const name = `(${point.x},${point.y})`
+    const name = base64(Date.now() % 1e12) //`(${point.x},${point.y})`
     const loc = new Location(
       {name, x: point.x, y: point.y, neighborNames: []},
       this
@@ -455,6 +453,10 @@ export default class CanvasStore {
       x: pageX - offsetX,
       y: pageY - offsetY,
     }
+  }
+
+  static defaultLabelStyler(loc: Readonly<Location>) {
+    return {fill: 'rgba(244,80,37, .9)', font: 'Courier New 10pt'}
   }
 
   static defaultLocStyler(loc: Readonly<Location>) {

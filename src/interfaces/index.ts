@@ -23,6 +23,10 @@ export interface StylableParams {
   strokeWidth?: number
 }
 
+export interface LabelStyleParams extends StylableParams {
+  font?: string
+}
+
 export interface StateButtonBoxProps {
   onClickUndo: (e?: MouseEvent) => void
   onClickRedo: (e?: MouseEvent) => void
@@ -30,6 +34,7 @@ export interface StateButtonBoxProps {
   redoCount: number
 }
 
+export type LabelStyler = (loc: Location) => LabelStyleParams
 export type LocationStyler = (loc: Location) => StylableParams
 export type LocationShaper = <P extends ShapeParams>(
   loc: Location<Shape<P>> | LocationLike & P

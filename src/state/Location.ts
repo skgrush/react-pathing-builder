@@ -1,4 +1,5 @@
-import {Shape, Circle} from '../drawables'
+import {Label, Shape, Circle} from '../drawables'
+import {CanvasStyleType} from '../interfaces'
 import CanvasStore from './CanvasStore'
 
 export interface ShapeC<T> {
@@ -18,7 +19,7 @@ export type LocationMutablePropName = 'name' | 'shape'
 export type LocationMutablePropType = string | Shape
 
 export default class Location<T extends Shape = Shape> implements LocationLike {
-  name: string
+  private _name: string
   private _x: number
   private _y: number
   readonly store: CanvasStore
@@ -26,6 +27,16 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   readonly neighborNames: string[]
 
   shape: T
+  label: Label
+
+  get name() {
+    return this._name
+  }
+
+  set name(val: string) {
+    this._name = String(val)
+    if (this.label) this.label.text = this._name
+  }
 
   get x() {
     return this._x
@@ -33,6 +44,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   set x(val: number) {
     this._x = val
     this.shape.moveTo(val, this._y)
+    this.label.moveTo(val, this._y)
   }
 
   get y() {
@@ -41,6 +53,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   set y(val: number) {
     this._y = val
     this.shape.moveTo(this._x, val)
+    this.label.moveTo(this._x, val)
   }
 
   constructor(
@@ -49,7 +62,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     shapeType?: ShapeC<T>,
     shapeArgs?: object
   ) {
-    this.name = String(data.name)
+    this._name = String(data.name)
     this._x = +data.x
     this._y = +data.y
     this.store = store
@@ -58,6 +71,13 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     this.neighborNames = data.neighborNames
       ? data.neighborNames.map(String)
       : []
+
+    this.label = new Label({
+      text: this._name,
+      x: this.x,
+      y: this.y,
+      ...this.store.labelStyleGetter(this),
+    })
 
     if (shapeType) {
       console.info('Have shapeType:', shapeType)
@@ -81,6 +101,8 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
           y: this.y,
         }) as unknown) as T
     }
+
+    this.label.offset = this.calculateLabelOffset()
   }
 
   updateStyle = () => {
@@ -93,6 +115,16 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     }
     if (style.strokeWidth) {
       this.shape.strokeWidth = style.strokeWidth > 0 ? style.strokeWidth : 1
+    }
+
+    if (this.label) {
+      const fontStyle = this.store.labelStyleGetter(this)
+      for (const p of ['font', 'fill', 'stroke', 'strokeWidth']) {
+        if (fontStyle.hasOwnProperty(p)) {
+          ;(this.label as any)[p] = (fontStyle as any)[p]
+        }
+      }
+      this.label.offset = this.calculateLabelOffset()
     }
   }
 
@@ -111,5 +143,47 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     ) as T
     this.updateStyle()
     return this.shape
+  }
+
+  private calculateLabelOffset() {
+    let x = 0,
+      y = 0
+    if (this.shape) {
+      x += this.shape.width / 2
+      y += this.shape.height / 2
+
+      if (this.label && this.label.width) {
+        x += this.label.width / 4
+        y += this.label.height / 2
+      }
+    }
+    return {x, y}
+  }
+
+  draw = (ctx: CanvasRenderingContext2D, selectStyle?: CanvasStyleType) => {
+    // calc label dimensions if we haven't already
+    if (!this.label.width || !this.label.height) {
+      this.label._calcDimensions(ctx)
+      this.label.offset = this.calculateLabelOffset()
+    }
+
+    if (!selectStyle) {
+      this.shape.draw(ctx)
+      this.label.draw(ctx)
+    } else {
+      // backup values
+      const {stroke, strokeWidth} = this.shape
+
+      this.shape.stroke = selectStyle
+      this.shape.strokeWidth = 2
+      try {
+        // draw it
+        this.shape.draw(ctx)
+        this.label.draw(ctx, selectStyle)
+      } finally {
+        // reset style
+        Object.assign(this.shape, {stroke, strokeWidth})
+      }
+    }
   }
 }
