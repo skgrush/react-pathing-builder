@@ -1,10 +1,16 @@
-import Location from './Location'
+import Location, {LocationLike} from './Location'
 import Edge, {getEdgeKey} from './Edge'
-import {Shape, Star} from '../drawables'
-import {Pointed, CanvasStyleType} from '../interfaces'
+import {Star, Shape, ShapeMap, ShapeSubclass} from '../drawables'
+import {
+  Pointed,
+  CanvasStyleType,
+  LocationStyler,
+  LocationShaper,
+} from '../interfaces'
 import {diffPointed} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
+import {ShapeParams} from '../drawables/Shape'
 
 export type ClickModifier = 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'
 const CLICK_MODIFIERS = Object.freeze([
@@ -27,6 +33,8 @@ interface Parameters {
   weightScale?: number
   addMod?: ClickModifier
   selectionStroke?: CanvasStyleType
+  locStyleGetter?: LocationStyler
+  locShapeGetter?: LocationShaper
 }
 
 interface ConstructorParameters extends Parameters {
@@ -49,6 +57,10 @@ export default class CanvasStore {
   private addMod: ClickModifier = 'shiftKey'
   /** highlight color/style of selected Locations or Edges */
   private selectionStroke: CanvasStyleType = '#C00'
+  /** Resolve shape style from a Location */
+  locStyleGetter: LocationStyler = CanvasStore.defaultLocStyler
+  /** Resolve shape class from a Location */
+  locShapeGetter: LocationShaper = CanvasStore.defaultLocShaper
 
   private valid: boolean = false
   private dragoff: Pointed | null = null
@@ -101,6 +113,14 @@ export default class CanvasStore {
 
     if (selectionStroke !== undefined) this.selectionStroke = selectionStroke
 
+    if (params.hasOwnProperty('locStyleGetter'))
+      this.locStyleGetter =
+        params.locStyleGetter || CanvasStore.defaultLocStyler
+
+    if (params.hasOwnProperty('locShapeGetter'))
+      this.locShapeGetter =
+        params.locShapeGetter || CanvasStore.defaultLocShaper
+
     if (pixelOffset) {
       const {x, y} = pixelOffset
       this.pixelOffset = Object.assign(this.pixelOffset || {}, {x, y})
@@ -119,6 +139,20 @@ export default class CanvasStore {
         ;(this as any)[modProp] = modArg
       } else console.warn(`Parameter ${modProp} has non-modifier value`)
     }
+  }
+
+  updateShapes = () => {
+    for (const loc of this.locationMap.values()) {
+      loc.updateShape()
+    }
+    this.valid = false
+  }
+
+  updateStyles = () => {
+    for (const loc of this.locationMap.values()) {
+      loc.updateStyle()
+    }
+    this.valid = false
   }
 
   addLoc = (loc: Location) => {
@@ -308,16 +342,25 @@ export default class CanvasStore {
   }
 
   dblClickHandler = (e: MouseEvent) => {
-    const point = this._findMouse(e)
+    this.createLocAtMouse(this._findMouse(e))
+    this.valid = false
+  }
+
+  createLocAtMouse = (point: Pointed, select = true) => {
     const name = `(${point.x},${point.y})`
-    const shapeParams = {radius: 20, fill: 'rgba(0,255,0,.6)'}
-    this.addLoc(
-      new Location(
-        {name, x: point.x, y: point.y, neighborNames: []},
-        Star,
-        shapeParams
-      )
+    const loc = new Location(
+      {name, x: point.x, y: point.y, neighborNames: []},
+      this
     )
+
+    if (!this.addLoc(loc)) return null
+
+    if (select) {
+      this.selectedName = loc.name
+      this.dragoff = {x: 0, y: 0}
+    }
+
+    return loc
   }
 
   /**
@@ -328,19 +371,26 @@ export default class CanvasStore {
     const point = this._findMouse(e)
     const selectedLoc = this.getFirstLocationAt(point)
     console.debug('prevSelected:', prevSelected, 'selected:', selectedLoc)
+    const isAddMod = e[this.addMod]
 
     if (selectedLoc instanceof Location) {
+      // selected a location
       this.valid = false
       this.selectedName = selectedLoc.name
       if (
         prevSelected instanceof Location &&
         prevSelected !== selectedLoc &&
-        e[this.addMod]
+        isAddMod
       ) {
-        // linking between two locations; either create one or select it
+        // Add-Modifier is held, so we're linking between two Locations
         const key = getEdgeKey(prevSelected, selectedLoc)
-        if (this.edgeMap.has(key) || this.createEdge(prevSelected, selectedLoc))
+        if (this.edgeMap.has(key)) {
+          // edge exists; select the EDGE
           this.selectedName = key
+        } else {
+          // no edge; create new edge, keep selecting LOCATION
+          this.createEdge(prevSelected, selectedLoc)
+        }
       } else {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         const {x, y} = selectedLoc
@@ -349,6 +399,12 @@ export default class CanvasStore {
       }
     } else if (<any>selectedLoc instanceof Edge) {
       // selected an edge; that's not really an option yet though
+    } else if (prevSelected instanceof Location && !selectedLoc && isAddMod) {
+      // Add-Modifier is held and prevSelected, create a Location and Edge
+      const newLoc = this.createLocAtMouse(point)
+      if (newLoc) {
+        this.createEdge(prevSelected, newLoc)
+      }
     } else if (this.selectedName) {
       this.valid = false
       this.selectedName = null
@@ -399,5 +455,29 @@ export default class CanvasStore {
       x: pageX - offsetX,
       y: pageY - offsetY,
     }
+  }
+
+  static defaultLocStyler(loc: Readonly<Location>) {
+    return {fill: 'rgba(0,255,0,.9)'}
+  }
+
+  /**
+   * Try to get a shape name from the LocationLike data, defaults to Circle.
+   */
+  static defaultLocShaper<T extends ShapeParams>(
+    loc: Location<Shape<T>> | LocationLike & T
+  ): [ShapeSubclass<T>, T] {
+    let shapeC: ShapeSubclass<any> | undefined
+    if (loc instanceof Location && loc.data.shape) {
+      shapeC = ShapeMap[loc.data.shape]
+    } else if (loc.hasOwnProperty('shape')) {
+      shapeC = ShapeMap[(loc as any).shape]
+    }
+
+    if (!shapeC) shapeC = ShapeMap.Circle
+    return [
+      shapeC,
+      ({radius: 10, width: 20, height: 20, sidelength: 10} as unknown) as T,
+    ]
   }
 }

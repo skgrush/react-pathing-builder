@@ -324,6 +324,15 @@ export default class ChangeStore {
   private hasntMoved(target: Location, coords: Pointed) {
     const prev = this.sequenceStack[this.sequenceStack.length - 1]
 
+    if (
+      prev &&
+      prev.action === 'add' &&
+      prev.target instanceof Edge &&
+      prev.target.end === target
+    ) {
+      // we added a new node, so just abort the drop procedure
+      return true
+    }
     if (!prev || prev.action !== 'grab' || prev.target !== target) {
       console.error('previous sequence Change:', prev, 'target:', target)
       throw new ChangeError("hasntMoved() called out of sequence of 'grab'")
