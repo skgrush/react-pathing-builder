@@ -1,5 +1,5 @@
 import Shape, {ShapeParams} from './Shape'
-import {GeometryError} from '../errors'
+import {GeometryError} from '../../errors'
 
 const ROTATION_FACTOR = (2 * Math.PI) / 10 // alpha
 
@@ -29,7 +29,7 @@ export default class Star extends Shape<StarParams> {
    * Based on code by ChrisIPowell and Nycholas Weissenberg on StackOverflow.
    * @link https://stackoverflow.com/a/17279374
    */
-  draw = (ctx: CanvasRenderingContext2D) => {
+  doPath(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
     for (let i = 11; i > 0; i--) {
       const R = (this.radius * ((i % 2) + 1)) / 2
@@ -37,15 +37,5 @@ export default class Star extends Shape<StarParams> {
       ctx.lineTo(R * Math.sin(omega) + this.x, R * Math.cos(omega) + this.y)
     }
     ctx.closePath()
-
-    if (this.fill) {
-      ctx.fillStyle = this.fill
-      ctx.fill()
-    }
-    if (this.stroke && this.strokeWidth > 0) {
-      ctx.strokeStyle = this.stroke
-      ctx.lineWidth = this.strokeWidth
-      ctx.stroke()
-    }
   }
 }

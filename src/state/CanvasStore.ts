@@ -1,6 +1,6 @@
 import Location, {LocationLike} from './Location'
 import Edge, {getEdgeKey} from './Edge'
-import {Star, Shape, ShapeMap, ShapeSubclass} from '../drawables'
+import {Star, Shape, ShapeMap, ShapeSubclass, ShapeParams} from '../drawables'
 import {
   Pointed,
   CanvasStyleType,
@@ -11,7 +11,6 @@ import {
 import {diffPointed, base64} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
-import {ShapeParams} from '../drawables/Shape'
 
 export type ClickModifier = 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'
 const CLICK_MODIFIERS = Object.freeze([

@@ -1,5 +1,5 @@
 import Shape, {ShapeParams} from './Shape'
-import {GeometryError} from '../errors'
+import {GeometryError} from '../../errors'
 
 export interface RectangleParams extends ShapeParams {
   width: number
@@ -30,16 +30,8 @@ export default class Rectangle<
       throw new GeometryError(`Rectangle height of ${this._height} invalid`)
   }
 
-  draw = (ctx: CanvasRenderingContext2D) => {
-    const {x, y, width, height, fill, stroke, strokeWidth} = this
-    if (fill) {
-      ctx.fillStyle = fill
-      ctx.fillRect(x - width / 2, y - height / 2, width, height)
-    }
-    if (stroke && strokeWidth > 0) {
-      ctx.strokeStyle = stroke
-      ctx.lineWidth = strokeWidth
-      ctx.strokeRect(x, y, width, height)
-    }
+  doPath(ctx: CanvasRenderingContext2D) {
+    const {x, y, width, height} = this
+    ctx.rect(x - width / 2, y - height / 2, width, height)
   }
 }

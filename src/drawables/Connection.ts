@@ -1,4 +1,5 @@
 import Drawable from './Drawable'
+import PathDrawable from './PathDrawable'
 import {CanvasStyleType, Pointed} from '../interfaces'
 import {
   numAvg,
@@ -14,7 +15,7 @@ export interface ConnectionParams {
   strokeWidth?: number
 }
 
-export default class Connection extends Drawable {
+export default class Connection extends PathDrawable {
   readonly start: Drawable
   readonly end: Drawable
   stroke: CanvasStyleType = '#000'
@@ -47,13 +48,10 @@ export default class Connection extends Drawable {
     this.end = params.end
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
+  doPath(ctx: CanvasRenderingContext2D) {
     ctx.beginPath()
-    ctx.strokeStyle = this.stroke
-    ctx.lineWidth = this.strokeWidth
     ctx.moveTo(this.start.x, this.start.y)
     ctx.lineTo(this.end.x, this.end.y)
-    ctx.stroke()
   }
 
   /**

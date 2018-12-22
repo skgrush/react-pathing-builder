@@ -1,7 +1,7 @@
 import Shape, {ShapeParams} from './Shape'
-import {GeometryError} from '../errors'
-import {Pointed} from '../interfaces'
-import {euclideanDistance} from '../utils'
+import {GeometryError} from '../../errors'
+import {Pointed} from '../../interfaces'
+import {euclideanDistance} from '../../utils'
 
 export interface CircleParams extends ShapeParams {
   radius: number
@@ -29,19 +29,10 @@ export default class Circle<
       throw new GeometryError(`Circle radius ${this.radius} invalid`)
   }
 
-  draw = (ctx: CanvasRenderingContext2D) => {
-    const {x, y, radius, fill, stroke, strokeWidth} = this
+  doPath(ctx: CanvasRenderingContext2D) {
+    const {x, y, radius} = this
     ctx.beginPath()
     ctx.arc(x, y, radius, 0, Math.PI * 2)
-    if (fill) {
-      ctx.fillStyle = fill
-      ctx.fill()
-    }
-    if (stroke && strokeWidth > 0) {
-      ctx.strokeStyle = stroke
-      ctx.lineWidth = strokeWidth
-      ctx.stroke()
-    }
   }
 
   contains = (point: Pointed) => {

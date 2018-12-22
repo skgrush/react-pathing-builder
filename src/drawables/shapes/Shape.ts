@@ -1,10 +1,10 @@
-import Drawable, {DrawableParams} from './Drawable'
+import PathDrawable, {PathDrawableParams} from '../PathDrawable'
 
-export interface ShapeParams extends DrawableParams {}
+export interface ShapeParams extends PathDrawableParams {}
 
 export default abstract class Shape<
   T extends ShapeParams = ShapeParams
-> extends Drawable {
+> extends PathDrawable {
   // x: number
   // y: number
   // fill?: string
