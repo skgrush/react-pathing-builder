@@ -6,7 +6,9 @@ export interface CircleParams extends ShapeParams {
   radius: number
 }
 
-export default class Circle extends Shape {
+export default class Circle<
+  P extends CircleParams = CircleParams
+> extends Shape<P> {
   radius: number
 
   get width() {
@@ -17,7 +19,7 @@ export default class Circle extends Shape {
     return 2 * this.radius
   }
 
-  constructor(params: CircleParams) {
+  constructor(params: P) {
     super(params)
 
     this.radius = params.radius

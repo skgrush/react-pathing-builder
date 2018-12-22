@@ -5,10 +5,12 @@ export interface SquareParams extends ShapeParams {
   sidelength: number
 }
 
-export default class Square extends Rectangle {
+export default class Square<
+  P extends SquareParams = SquareParams
+> extends Rectangle {
   sidelength: number
 
-  constructor(params: SquareParams) {
+  constructor(params: P) {
     const {sidelength} = params
     super(Object.assign({width: sidelength, height: sidelength}, params))
 

@@ -7,7 +7,7 @@ export interface StarParams extends ShapeParams {
   radius: number
 }
 
-export default class Star extends Shape {
+export default class Star extends Shape<StarParams> {
   radius: number
 
   get width() {

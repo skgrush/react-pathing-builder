@@ -1,14 +1,12 @@
-import {CanvasStyleType, Pointed} from '../interfaces'
+import {CanvasStyleType, StylableParams, Pointed} from '../interfaces'
 
-export interface DrawableParams {
+/** adds {x, y}, extends {fill?, stroke?, width?} */
+export interface DrawableParams extends StylableParams {
   x: number
   y: number
-  fill?: CanvasStyleType
-  stroke?: CanvasStyleType
-  strokeWidth?: number
 }
 
-export default abstract class Drawable {
+export default abstract class Drawable implements DrawableParams {
   x: number
   y: number
   fill?: CanvasStyleType

@@ -6,7 +6,9 @@ export interface RectangleParams extends ShapeParams {
   height: number
 }
 
-export default class Rectangle extends Shape {
+export default class Rectangle<
+  P extends RectangleParams = RectangleParams
+> extends Shape<P> {
   _width: number
   _height: number
 
@@ -17,7 +19,7 @@ export default class Rectangle extends Shape {
     return this._height
   }
 
-  constructor(params: RectangleParams) {
+  constructor(params: P) {
     super(params)
     this._width = params.width
     this._height = params.height
