@@ -1,5 +1,5 @@
-import {Label, Shape, Circle} from '../drawables'
-import {CanvasStyleType} from '../interfaces'
+import {Label, Shape, Circle, ShapeMap} from '../drawables'
+import {CanvasStyleType, Pointed} from '../interfaces'
 import CanvasStore from './CanvasStore'
 
 export interface ShapeC<T> {
@@ -16,7 +16,14 @@ export interface LocationLike {
 }
 
 export type LocationMutablePropName = 'name' | 'shape'
-export type LocationMutablePropType = string | Shape
+export type LocationMutablePropType = string
+
+export interface LocationMutableProps {
+  name?: string
+  x?: number
+  y?: number
+  shape?: string
+}
 
 export default class Location<T extends Shape = Shape> implements LocationLike {
   private _name: string
@@ -103,6 +110,13 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     }
 
     this.label.offset = this.calculateLabelOffset()
+  }
+
+  moveTo = (P: Pointed) => {
+    this._x = P.x
+    this._y = P.y
+    this.shape.moveTo(this._x, this._y)
+    this.label.moveTo(this._x, this._y)
   }
 
   updateStyle = () => {

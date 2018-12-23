@@ -1,12 +1,29 @@
 div.pathing-builder {
-  background: beige;
+  background: gray;
+
+  display: grid;
+  grid-template-columns: 200px auto;
 }
 
 div.pathing-builder > p {
   color: teal;
 }
 
+div.pathing-builder > div.pathing-builder-statebtnbox {
+  grid-column: 2;
+}
+
+div.pathing-builder > div.pathing-builder-propertiespanel {
+  grid-column: 1;
+}
+div.pathing-builder > div.pathing-builder-propertiespanel > section > form > * {
+  border: 1px solid;
+  border-radius: 15px;
+}
+
 div.pathing-builder > canvas.pathing-builder-canvas {
   padding: 0;
   border-width: 0;
+
+  grid-column: 2;
 }

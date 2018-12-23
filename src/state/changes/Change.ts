@@ -279,7 +279,8 @@ export class ChangeGrab extends Change implements ChangeGrabLike {
   constructor(C: ChangeGrabLike) {
     super(C)
     this.target = C.target
-    this.oldValue = C.oldValue
+    const {x, y} = C.oldValue
+    this.oldValue = {x, y}
   }
 
   static flip(C: ChangeGrab | ChangeGrabLike) {
@@ -303,7 +304,8 @@ export class ChangeDrop extends Change implements ChangeDropLike {
   constructor(C: ChangeDropLike) {
     super(C)
     this.target = C.target
-    this.newValue = C.newValue
+    const {x, y} = C.newValue
+    this.newValue = {x, y}
   }
 
   static flip(C: ChangeDrop | ChangeDropLike) {

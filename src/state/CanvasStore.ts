@@ -1,5 +1,5 @@
-import Location, {LocationLike} from './Location'
-import Edge, {getEdgeKey} from './Edge'
+import Location, {LocationLike, LocationMutableProps} from './Location'
+import Edge, {getEdgeKey, EdgeMutable} from './Edge'
 import {Star, Shape, ShapeMap, ShapeSubclass, ShapeParams} from '../drawables'
 import {
   Pointed,
@@ -63,6 +63,8 @@ export default class CanvasStore {
   locStyleGetter: LocationStyler = CanvasStore.defaultLocStyler
   /** Resolve shape class from a Location */
   locShapeGetter: LocationShaper = CanvasStore.defaultLocShaper
+  /** PathingBuilder method to call for forcing React to update */
+  private updateReact: (cb?: () => void) => void
 
   /** @section {drawing state variables} */
   /** Canvas validity; `false` indicates a redraw is needed. */
@@ -70,7 +72,9 @@ export default class CanvasStore {
   /** Drag Offset between mouse and thing; indicates dragging is happening. */
   private dragoff: Pointed | null = null
   /** Name of selected Location or Edge, else null. */
-  private selectedName: string | null = null
+  private _selectedName: string | null = null
+  /** Selected Location | Edge | null. */
+  private _selection: Location | Edge | null = null
   /** ID from setInterval in prepCanvas() */
   private intervalID: number | null = null
   /** Log of changes to the state; implements undo/redo */
@@ -81,14 +85,12 @@ export default class CanvasStore {
   /** map currently-added Edge-keys to Edges. */
   private readonly edgeMap: Map<string, Edge> = new Map()
 
-  /**
-   * The currently-selected Location or edge, based on `this.selectedName`.
-   */
+  get selectedName() {
+    return this._selectedName
+  }
+
   get selection() {
-    if (!this.selectedName) return null
-    if (this.selectedName.includes('\t'))
-      return this.edgeMap.get(this.selectedName) || null
-    return this.locationMap.get(this.selectedName) || null
+    return this._selection
   }
 
   get mapImg() {
@@ -99,10 +101,20 @@ export default class CanvasStore {
     return this.weightScaleMult
   }
 
+  get canvasDimensions(): Pointed {
+    return this.img
+      ? {
+          x: this.img.width,
+          y: this.img.height,
+        }
+      : {x: 0, y: 0}
+  }
+
   constructor(params: ConstructorParameters) {
     ;(window as any).canvasStore = this
     this.changelog = new ChangeStore(this, params.updateReact)
     this.canvas = params.canvas
+    this.updateReact = params.updateReact
     this.updateParams(params, true)
   }
 
@@ -190,6 +202,43 @@ export default class CanvasStore {
     return true
   }
 
+  modLoc = (loc: Readonly<Location>, diff: LocationMutableProps) => {
+    let ret = true
+    const L = this.locationMap.get(loc.name)
+    if (!L) {
+      console.debug('modLoc called on unregistered Location')
+      return false
+    }
+
+    if (diff.name) {
+      L.name = diff.name
+      this.changelog.newMutateLoc(L, 'name', L.name, diff.name)
+    }
+    if (diff.shape) {
+      if (ShapeMap.hasOwnProperty(diff.shape)) {
+        // TODO
+        console.debug('shape updating not yet implemented')
+        //this.changelog.newMutateLoc(L, 'shape', )
+        ret = false
+      } else {
+        console.debug('Unexpected shape to Location.update:', diff.shape)
+        ret = false
+      }
+    }
+    if (diff.x !== undefined || diff.y !== undefined) {
+      const oldX = L.x,
+        oldY = L.y
+      let {x, y} = diff
+      if (!x) x = oldX
+      if (!y) y = oldY
+      this.changelog.newGrab(L, L)
+      L.moveTo({x, y})
+      this.changelog.newDrop(L, {x, y})
+    }
+    this.valid = false
+    return ret
+  }
+
   removeLoc = (locName: string) => {
     const loc = this.locationMap.get(locName)
     if (!loc) return false
@@ -206,6 +255,9 @@ export default class CanvasStore {
     this.valid = false
     if (this.locationMap.delete(locName)) {
       this.changelog.newRemove(loc)
+      if (this._selectedName === locName) {
+        this.select(null)
+      }
       return true
     }
     console.warn(`Failed to remove location ${locName}; not in locationMap`)
@@ -228,6 +280,23 @@ export default class CanvasStore {
     return true
   }
 
+  modEdge = (edge: Readonly<Edge>, diff: EdgeMutable) => {
+    let ret = true
+    const E = this.edgeMap.get(edge.key)
+    if (!E) {
+      console.debug('modEdge called on unregistered Edge')
+      return false
+    }
+
+    if (diff.weight !== undefined) {
+      const {weight} = E
+      E.weight = diff.weight
+      this.changelog.newMutateEdge(E, 'weight', weight, diff.weight)
+    }
+    this.valid = false
+    return ret
+  }
+
   removeEdge = (start: Location, end: Location) => {
     const startNNidx = start.neighborNames.indexOf(end.name)
     const endNNidx = end.neighborNames.indexOf(start.name)
@@ -246,6 +315,9 @@ export default class CanvasStore {
     }
 
     this.changelog.newRemove(E)
+    if (this._selectedName === edgeKey) {
+      this.select(null)
+    }
     this.valid = false
     return true
   }
@@ -370,6 +442,40 @@ export default class CanvasStore {
     this.valid = false
   }
 
+  select = (
+    keyname: string | null,
+    updateReact = true,
+    dragoff: Pointed | null = null
+  ) => {
+    let S: Location | Edge | null | undefined
+
+    if (!keyname) {
+      // deselect
+      S = null
+      this.dragoff = null
+    } else if (keyname.includes('\t')) {
+      // edge
+      S = this.edgeMap.get(keyname)
+      this.dragoff = null
+    } else {
+      // Location
+      S = this.locationMap.get(keyname)
+      this.dragoff = dragoff
+    }
+    if (S == undefined) {
+      console.debug('select() on unknown key', keyname)
+    }
+
+    this._selection = S || null
+    this._selectedName = keyname || null
+
+    this.valid = false
+
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
+  }
+
   createLocAtMouse = (point: Pointed, select = true) => {
     const name = base64(Date.now() % 1e12) //`(${point.x},${point.y})`
     const loc = new Location(
@@ -380,8 +486,7 @@ export default class CanvasStore {
     if (!this.addLoc(loc)) return null
 
     if (select) {
-      this.selectedName = loc.name
-      this.dragoff = {x: 0, y: 0}
+      this.select(name)
     }
 
     return loc
@@ -393,7 +498,7 @@ export default class CanvasStore {
   mouseDownHandler = (e: MouseEvent) => {
     const prevSelected = this.selection
     const point = this._findMouse(e)
-    const selectedLoc =
+    let selectedLoc =
       this.getFirstLocationAt(point) || this.getFirstEdgeAt(point)
 
     console.debug('prevSelected:', prevSelected, 'selected:', selectedLoc)
@@ -401,8 +506,6 @@ export default class CanvasStore {
 
     if (selectedLoc instanceof Location) {
       // selected a location
-      this.valid = false
-      this.selectedName = selectedLoc.name
       if (
         prevSelected instanceof Location &&
         prevSelected !== selectedLoc &&
@@ -412,22 +515,22 @@ export default class CanvasStore {
         const key = getEdgeKey(prevSelected, selectedLoc)
         if (this.edgeMap.has(key)) {
           // edge exists; select the EDGE
-          this.selectedName = key
+          this.select(key)
         } else {
           // no edge; create new edge, keep selecting LOCATION
           this.createEdge(prevSelected, selectedLoc)
+          this.select(selectedLoc.name)
         }
       } else {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         const {x, y} = selectedLoc
-        this.dragoff = diffPointed(point, {x, y})
+        this.select(selectedLoc.name, false, diffPointed(point, {x, y}))
         this.changelog.newGrab(selectedLoc, {x, y})
       }
     } else if (selectedLoc instanceof Edge) {
       // selected an edge; that's not really an option yet though
       console.debug('AN EDGE', selectedLoc)
-      this.valid = false
-      this.selectedName = selectedLoc.key
+      this.select(selectedLoc.key)
     } else if (prevSelected instanceof Location && !selectedLoc && isAddMod) {
       // Add-Modifier is held and prevSelected, create a Location and Edge
       const newLoc = this.createLocAtMouse(point)
@@ -435,8 +538,7 @@ export default class CanvasStore {
         this.createEdge(prevSelected, newLoc)
       }
     } else if (this.selectedName) {
-      this.valid = false
-      this.selectedName = null
+      this.select(null)
     }
   }
 
