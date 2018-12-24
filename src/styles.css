@@ -21,6 +21,10 @@ div.pathing-builder > div.pathing-builder-propertiespanel > section > form > * {
   border-radius: 15px;
 }
 
+div.pathing-builder > div.pathing-builder-propertiespanel dd.json {
+  overflow-wrap: break-word;
+}
+
 div.pathing-builder > canvas.pathing-builder-canvas {
   padding: 0;
   border-width: 0;

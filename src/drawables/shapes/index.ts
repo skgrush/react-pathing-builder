@@ -3,12 +3,14 @@ export * from './Rectangle'
 export * from './Shape'
 export * from './Square'
 export * from './Star'
+export * from './Triangle'
 
 import Circle from './Circle'
 import Rectangle from './Rectangle'
 import Shape, {ShapeParams} from './Shape'
 import Square from './Square'
 import Star from './Star'
+import Triangle from './Triangle'
 
 export {Circle, Rectangle, Shape, Square, Star}
 
@@ -27,6 +29,7 @@ export type ShapeMap = {
   ['Rectangle']: typeof Rectangle
   ['Square']: typeof Square
   ['Star']: typeof Star
+  ['Triangle']: typeof Triangle
   [index: string]: ShapeSubclass<any> | undefined
 }
 
@@ -36,6 +39,7 @@ export const ShapeMap: ShapeMap = {
   Rectangle,
   Square,
   Star,
+  Triangle,
 }
 
 export const ShapeSymbolMap: {[i: string]: string} = {

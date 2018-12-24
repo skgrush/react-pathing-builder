@@ -7,6 +7,14 @@ interface Props {
   selected: Readonly<Location>
 }
 
+function toJSON(data: object) {
+  try {
+    return JSON.stringify(data)
+  } catch {
+    return data
+  }
+}
+
 const LocationProperties: React.SFC<Props> = (props: Props) => {
   const {shape} = props.selected
   const sname = shape && shape.constructor.name
@@ -27,7 +35,7 @@ const LocationProperties: React.SFC<Props> = (props: Props) => {
       <dd>{sname && ShapeSymbolMap[sname]}</dd>
 
       <dt>data</dt>
-      <dd>{String(props.selected.data)}</dd>
+      <dd className="json">{toJSON(props.selected.data)}</dd>
     </dl>
   )
 }
