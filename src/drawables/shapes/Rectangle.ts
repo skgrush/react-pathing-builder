@@ -32,6 +32,8 @@ export default class Rectangle<
 
   doPath(ctx: CanvasRenderingContext2D) {
     const {x, y, width, height} = this
+    ctx.beginPath()
     ctx.rect(x - width / 2, y - height / 2, width, height)
+    ctx.closePath()
   }
 }
