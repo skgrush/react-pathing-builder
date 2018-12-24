@@ -20,6 +20,8 @@ const CLICK_MODIFIERS = Object.freeze([
   'shiftKey',
 ] as ClickModifier[])
 
+const DEFAULT_RADIUS = 10
+
 /**
  * The arguments and modifiable-properties of CanvasStore.
  * Can be passed to the constructor or updateParams().
@@ -56,7 +58,7 @@ export default class CanvasStore {
   /** mouse modifier for adding an Edge */
   private addMod: ClickModifier = 'shiftKey'
   /** highlight color/style of selected Locations or Edges */
-  private selectionStroke: CanvasStyleType = '#C00'
+  private selectionStroke: CanvasStyleType = '#F6B'
   /** Resolve label style from a Location */
   labelStyleGetter: LabelStyler = CanvasStore.defaultLabelStyler
   /** Resolve shape style from a Location */
@@ -215,11 +217,21 @@ export default class CanvasStore {
       this.changelog.newMutateLoc(L, 'name', L.name, diff.name)
     }
     if (diff.shape) {
+      const oldShape = L.shape
       if (ShapeMap.hasOwnProperty(diff.shape)) {
         // TODO
-        console.debug('shape updating not yet implemented')
-        //this.changelog.newMutateLoc(L, 'shape', )
-        ret = false
+        const shapeClass = ShapeMap[diff.shape]
+        if (!shapeClass) {
+          console.warn(`ShapeMap[${diff.shape}] -> ${shapeClass}`)
+          ret = false
+        } else {
+          const newShape = L.updateShape(shapeClass)
+          if (newShape)
+            this.changelog.newMutateLoc(L, 'shape', oldShape, newShape)
+          else {
+            ret = false
+          }
+        }
       } else {
         console.debug('Unexpected shape to Location.update:', diff.shape)
         ret = false
@@ -589,30 +601,43 @@ export default class CanvasStore {
   }
 
   static defaultLabelStyler(loc: Readonly<Location>) {
-    return {fill: 'rgba(244,80,37, .9)', font: 'Courier New 10pt'}
+    return {fill: 'rgba(204,0,0,0.9)', font: 'Courier New 10pt'}
   }
 
   static defaultLocStyler(loc: Readonly<Location>) {
-    return {fill: 'rgba(0,255,0,.9)'}
+    return {fill: 'rgba(0,255,127,.9)'}
   }
 
   /**
    * Try to get a shape name from the LocationLike data, defaults to Circle.
    */
   static defaultLocShaper<T extends ShapeParams>(
-    loc: Location<Shape<T>> | LocationLike & T
+    loc: Location<Shape<T>> | LocationLike & T & {shape?: any}
   ): [ShapeSubclass<T>, T] {
     let shapeC: ShapeSubclass<any> | undefined
-    if (loc instanceof Location && loc.data.shape) {
+    if (loc.shape) {
+      // loc has a property 'shape'; see if it's meaningful
+      if (typeof loc.shape == 'string') {
+        shapeC = ShapeMap[loc.shape]
+      } else if (loc.shape instanceof Shape)
+        shapeC = loc.shape.constructor as ShapeSubclass<any>
+      else if (loc.shape.prototype && loc.shape.prototype instanceof Shape)
+        shapeC = loc.shape.prototype.constructor
+    }
+    if (!shapeC && loc instanceof Location && loc.data.shape) {
       shapeC = ShapeMap[loc.data.shape]
-    } else if (loc.hasOwnProperty('shape')) {
-      shapeC = ShapeMap[(loc as any).shape]
     }
 
     if (!shapeC) shapeC = ShapeMap.Circle
-    return [
-      shapeC,
-      ({radius: 10, width: 20, height: 20, sidelength: 10} as unknown) as T,
-    ]
+    return [shapeC, (CanvasStore.defaultShapeProperties() as unknown) as T]
+  }
+
+  static defaultShapeProperties() {
+    return {
+      radius: DEFAULT_RADIUS,
+      width: 2 * DEFAULT_RADIUS,
+      height: 2 * DEFAULT_RADIUS,
+      sidelength: DEFAULT_RADIUS,
+    }
   }
 }

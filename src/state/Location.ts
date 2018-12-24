@@ -1,10 +1,13 @@
-import {Label, Shape, Circle, ShapeMap} from '../drawables'
+import {
+  Label,
+  Shape,
+  Circle,
+  ShapeMap,
+  ShapeParams,
+  ShapeSubclass,
+} from '../drawables'
 import {CanvasStyleType, Pointed} from '../interfaces'
 import CanvasStore from './CanvasStore'
-
-export interface ShapeC<T> {
-  new (...args: any[]): T
-}
 
 export interface LocationLike {
   name: string | number
@@ -66,7 +69,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   constructor(
     data: LocationLike,
     store: CanvasStore,
-    shapeType?: ShapeC<T>,
+    shapeType?: ShapeSubclass<T>,
     shapeArgs?: object
   ) {
     this._name = String(data.name)
@@ -88,15 +91,13 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
 
     if (shapeType) {
       console.info('Have shapeType:', shapeType)
-      this.shape = new shapeType(
-        Object.assign(
-          {
-            x: this.x,
-            y: this.y,
-          },
-          shapeArgs
-        )
-      )
+      this.shape = new shapeType(Object.assign(
+        {
+          x: this.x,
+          y: this.y,
+        },
+        shapeArgs
+      ) as any) as T
     } else {
       const tmpShape = this.updateShape()
       console.info('No shapeType:', tmpShape)
@@ -142,8 +143,13 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     }
   }
 
-  updateShape = () => {
-    const [shapeClass, opts] = this.store.locShapeGetter(this)
+  updateShape = (shapeClass?: ShapeSubclass<any>, opts?: any) => {
+    if (!shapeClass) {
+      ;[shapeClass, opts] = this.store.locShapeGetter(this)
+    }
+    if (!opts) {
+      opts = CanvasStore.defaultShapeProperties()
+    }
     console.info('updateShape:', shapeClass, opts)
 
     if (this.shape instanceof shapeClass) return false
@@ -152,9 +158,14 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
       return false
     }
 
-    this.shape = new shapeClass(
-      Object.assign({}, opts, {x: this.x, y: this.y})
-    ) as T
+    const current = this.shape || {x: this.x, y: this.y}
+
+    if (!opts)
+      this.shape = new shapeClass(
+        Object.assign({}, CanvasStore.defaultShapeProperties(), current)
+      ) as T
+    else this.shape = new shapeClass(Object.assign({}, current, opts)) as T
+
     this.updateStyle()
     return this.shape
   }
