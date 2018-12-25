@@ -219,7 +219,6 @@ export default class CanvasStore {
     if (diff.shape) {
       const oldShape = L.shape
       if (ShapeMap.hasOwnProperty(diff.shape)) {
-        // TODO
         const shapeClass = ShapeMap[diff.shape]
         if (!shapeClass) {
           console.warn(`ShapeMap[${diff.shape}] -> ${shapeClass}`)
@@ -256,17 +255,18 @@ export default class CanvasStore {
     return ret
   }
 
-  removeLoc = (locName: string) => {
+  removeLoc = (locIn: Readonly<Location>) => {
+    const locName = locIn.name
     const loc = this.locationMap.get(locName)
     if (!loc) return false
 
-    for (const neighborName of loc.neighborNames) {
+    for (const neighborName of [...loc.neighborNames]) {
       const neighbor = this.locationMap.get(neighborName)
       if (!neighbor) {
         console.warn(`loc ${locName} has missing neighbor ${neighborName}`)
         continue
       }
-      this.removeEdge(loc, neighbor)
+      this.removeEdgePair(loc, neighbor)
     }
 
     this.valid = false
@@ -314,7 +314,10 @@ export default class CanvasStore {
     return ret
   }
 
-  removeEdge = (start: Location, end: Location) => {
+  removeEdge = (edge: Readonly<Edge>) =>
+    this.removeEdgePair(edge.start, edge.end)
+
+  removeEdgePair = (start: Location, end: Location) => {
     const startNNidx = start.neighborNames.indexOf(end.name)
     const endNNidx = end.neighborNames.indexOf(start.name)
     const edgeKey = getEdgeKey(start, end)

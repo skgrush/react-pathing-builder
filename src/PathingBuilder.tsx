@@ -204,6 +204,8 @@ class PathingBuilder extends React.Component<Props, State> {
             selected={this.state.store.selection}
             modifyLocation={this.state.store.modLoc}
             modifyEdge={this.state.store.modEdge}
+            deleteLocation={this.state.store.removeLoc}
+            deleteEdge={this.state.store.removeEdge}
           />
         )}
 

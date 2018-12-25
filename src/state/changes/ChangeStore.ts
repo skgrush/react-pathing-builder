@@ -184,10 +184,10 @@ export default class ChangeStore {
     let ret
     if (C.target instanceof Location) {
       this.ignoreNext += C.target.neighborNames.length + 1
-      ret = this.canvasStore.removeLoc(C.target.name)
+      ret = this.canvasStore.removeLoc(C.target)
     } else if (C.target instanceof Edge) {
       this.ignoreNext += 1
-      ret = this.canvasStore.removeEdge(C.target.start, C.target.end)
+      ret = this.canvasStore.removeEdge(C.target)
     } else {
       console.error('Change Error on:', C)
       throw new ChangeError('Unexpected change target to _undoAdd()')

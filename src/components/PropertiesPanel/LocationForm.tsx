@@ -7,6 +7,7 @@ import Location, {
 } from '../../state/Location'
 import LocationProperties from './LocationProperties'
 import ShapeSelect from '../ShapeSelect'
+import Confirmer from '../Confirmer'
 
 interface Props {
   selected: Readonly<Location>
@@ -14,7 +15,7 @@ interface Props {
     loc: Readonly<Location>,
     diff: LocationMutableProps
   ) => boolean
-  store?: CanvasStore
+  deleteLocation: (loc: Readonly<Location>) => boolean
 }
 
 interface State {
@@ -22,6 +23,7 @@ interface State {
   initialX: number
   initialY: number
   initialShape: string
+  clickedDelete: boolean
 }
 
 export default class LocationForm extends React.Component<Props, State> {
@@ -62,6 +64,7 @@ export default class LocationForm extends React.Component<Props, State> {
       initialX: x,
       initialY: y,
       initialShape: shape && shape.constructor.name,
+      clickedDelete: false,
     }
   }
 
@@ -113,6 +116,7 @@ export default class LocationForm extends React.Component<Props, State> {
         initialX: x,
         initialY: y,
         initialShape: shape.constructor.name,
+        clickedDelete: false,
       })
     }
   }
@@ -120,15 +124,23 @@ export default class LocationForm extends React.Component<Props, State> {
   onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     e.persist()
-    console.log('onSubmit', [e])
 
-    let {nameValue, xValue, yValue, shapeValue} = this
+    if (this.state.clickedDelete) {
+      console.debug('Submitted via delete, deleting', this.props.selected)
+      this.props.deleteLocation(this.props.selected)
+      return
+    }
+
+    console.log('Submitted via update button', [e])
+
+    const {nameValue, xValue, yValue, shapeValue} = this
     const diff: LocationMutableProps = {}
     if (this.state.initialName !== nameValue) diff.name = nameValue
     if (this.state.initialX !== xValue) diff.x = xValue
     if (this.state.initialY !== yValue) diff.y = yValue
     if (this.state.initialShape !== shapeValue) diff.shape = shapeValue
 
+    this.setState({clickedDelete: false})
     this.props.modifyLocation(this.props.selected, diff)
   }
 
@@ -136,7 +148,7 @@ export default class LocationForm extends React.Component<Props, State> {
     const selected = this.props.selected
     const {canvasDimensions} = this.props.selected.store
     return (
-      <form onSubmit={this.onSubmit}>
+      <form onSubmit={this.onSubmit} name="prop-panel-loc-form">
         <LocationProperties selected={selected} />
         <table>
           <thead>
@@ -200,6 +212,14 @@ export default class LocationForm extends React.Component<Props, State> {
             </tr>
           </tbody>
         </table>
+        <div>
+          <p>Delete Location?</p>
+          <Confirmer
+            type="submit"
+            value="Delete"
+            onConfirm={() => this.setState({clickedDelete: true})}
+          />
+        </div>
       </form>
     )
   }

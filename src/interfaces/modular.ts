@@ -11,7 +11,9 @@ export interface PropertiesPanelProps {
     loc: Readonly<Location>,
     diff: LocationMutableProps
   ) => boolean
+  deleteLocation: (loc: Readonly<Location>) => boolean
   modifyEdge: (edge: Readonly<Edge>, diff: EdgeMutable) => boolean
+  deleteEdge: (edge: Readonly<Edge>) => boolean
 }
 
 export interface StateButtonBoxProps {
