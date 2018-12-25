@@ -226,9 +226,14 @@ export default class CanvasStore {
           ret = false
         } else {
           const newShape = L.updateShape(shapeClass)
-          if (newShape)
+          if (newShape) {
             this.changelog.newMutateLoc(L, 'shape', oldShape, newShape)
-          else {
+            // update edges
+            this.edgeMap.forEach(E => {
+              if (E.start === loc) E.connection.start = newShape
+              if (E.end === loc) E.connection.end = newShape
+            })
+          } else {
             ret = false
           }
         }

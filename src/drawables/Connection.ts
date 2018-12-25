@@ -16,8 +16,8 @@ export interface ConnectionParams {
 }
 
 export default class Connection extends PathDrawable {
-  readonly start: Drawable
-  readonly end: Drawable
+  start: Drawable
+  end: Drawable
   stroke: CanvasStyleType = '#000'
   strokeWidth: number = 3
 
