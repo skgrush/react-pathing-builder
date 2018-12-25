@@ -45,23 +45,28 @@ export default class Label<
     // get our effective x and y based on offset
     const {x, y} = addPointed(this, this.offset)
     const myFill = selectStyle || this.fill
+    const myStroke = this.strokeWidth > 0 && this.stroke
 
-    if (this.font) ctx.font = this.font
+    if (myFill || myStroke) {
+      if (this.font) {
+        ctx.font = this.font
+      }
+      if (myFill) {
+        ctx.fillStyle = myFill
+        ctx.fillText(this.text, x, y)
+      }
+      if (myStroke) {
+        ctx.strokeStyle = myStroke
+        ctx.lineWidth = this.strokeWidth
+        ctx.strokeText(this.text, x, y)
+      }
 
-    if (myFill) {
-      ctx.fillStyle = myFill
-      ctx.fillText(this.text, x, y)
+      // reset backed-up ctx variables
       ctx.fillStyle = fillStyle
-    }
-    if (this.stroke && this.strokeWidth > 0) {
-      ctx.strokeStyle = this.stroke
-      ctx.lineWidth = this.strokeWidth
-      ctx.strokeText(this.text, x, y)
       ctx.strokeStyle = strokeStyle
       ctx.lineWidth = lineWidth
+      ctx.font = font
     }
-
-    ctx.font = font
   }
 
   _calcDimensions(ctx: CanvasRenderingContext2D) {
