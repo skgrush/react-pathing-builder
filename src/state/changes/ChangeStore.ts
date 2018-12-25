@@ -278,10 +278,10 @@ export default class ChangeStore {
   }
 
   simplifyChanges = () => {
-    const additions: Change[] = []
-    const removals: Change[] = []
-    const mutations: Change[] = []
-    const moves: Change[] = []
+    let additions: Change[] = []
+    let removals: Change[] = []
+    let mutations: Change[] = []
+    let moves: Change[] = []
 
     for (const C of this.sequenceStack) {
       switch (C.action) {
@@ -297,12 +297,8 @@ export default class ChangeStore {
             additions.splice(idx, 1)
             return true
           })
-          ;[mutations, moves].forEach(ary =>
-            ary.forEach((C2, idx) => {
-              if (C.target !== C2.target) return false
-              ary.splice(idx, 1)
-            })
-          )
+          mutations = mutations.filter(C2 => C.target !== C2.target)
+          moves = moves.filter(C2 => C.target !== C2.target)
           // if the target is NOT a new addition, add the removal to the list
           if (!isNewAdd) {
             removals.push(C)
@@ -311,7 +307,32 @@ export default class ChangeStore {
 
         case 'mutate-loc':
         case 'mutate-edge':
+          // forget about similar events that this one overwrites.
+          mutations = mutations.filter(
+            C2 => C.target !== C2.target || C.property !== C2.property
+          )
+          mutations.push(C)
+          break
+
+        case 'drop':
+          moves = moves.filter(C2 => C.target !== C2.target)
+          moves.push(C)
+          break
+
+        case 'grab':
+          break
+
+        default:
+          console.warn('Unexpected Change.action:', (C as any).action, C)
+          break
       }
+    }
+
+    return {
+      additions,
+      removals,
+      mutations,
+      moves,
     }
   }
 
