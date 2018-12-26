@@ -56,14 +56,11 @@ export default class ShapeSelect extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: NaughtyProps) {
     const {value, defaultValue} = this.props as NaughtyProps
-    if (value && value !== this.state.value) {
-      console.debug("ShapeSelect.cDU: new 'value'")
+    if (
+      (value && value !== this.state.value) ||
+      (!value && defaultValue !== prevProps.defaultValue)
+    ) {
       this.setState({value})
-    } else if (!value && defaultValue !== prevProps.defaultValue) {
-      console.debug('ShapeSelect.cDU: new defaultValue')
-      this.setState({value})
-    } else {
-      console.debug('ShapeSelect.cDU: neither?', prevProps, this.props)
     }
   }
 

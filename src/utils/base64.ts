@@ -9,3 +9,10 @@ export function base64(V: number, rest = ''): string {
   rest = CHARS.charAt(mod) + rest
   return remaining <= 0 ? rest : base64(remaining, rest)
 }
+
+/**
+ * Generate a probably unique AND SHORT identifier.
+ */
+export function b64time() {
+  return base64(Date.now() % 1e11)
+}

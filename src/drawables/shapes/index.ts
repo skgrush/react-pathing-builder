@@ -46,6 +46,6 @@ export const ShapeSymbolMap: {[i: string]: string} = {
   Circle: '●', // '\u25CF', // BLACK CIRCLE
   Rectangle: '█', // '\u2588', // FULL BLOCK
   Square: '■', // '\u25A0', // BLACK SQUARE
-  Star: '\u2605',
+  Star: '★', // '\u2605', // BLACK STAR
   Triangle: '▲', // '\u25B2', // BLACK UP-POINTING TRIANGLE
 }

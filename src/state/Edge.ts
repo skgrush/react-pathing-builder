@@ -10,12 +10,13 @@ export interface EdgeMutable {
 }
 
 export function getEdgeKey(start: Location, end: Location) {
-  return [start.name, end.name].sort().join('\t')
+  return [start.key, end.key].sort().join('\t')
 }
 
 export default class Edge {
   readonly start: Location
   readonly end: Location
+  readonly key: string
   readonly store: CanvasStore
   readonly connection: Connection
   private _weight: number
@@ -23,6 +24,7 @@ export default class Edge {
   constructor(s: Location, e: Location, store: CanvasStore, weight?: number) {
     this.start = s
     this.end = e
+    this.key = getEdgeKey(this.start, this.end)
     this.store = store
     this._weight = weight && weight > 0 ? weight : 1
     this.connection = new Connection({
@@ -30,10 +32,6 @@ export default class Edge {
       end: e.shape,
       strokeWidth: this._weight * store.weightScale,
     })
-  }
-
-  get key() {
-    return getEdgeKey(this.start, this.end)
   }
 
   get weight() {

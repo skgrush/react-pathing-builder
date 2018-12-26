@@ -8,7 +8,7 @@ import {
   LocationShaper,
   LabelStyler,
 } from '../interfaces'
-import {diffPointed, base64} from '../utils'
+import {diffPointed, b64time} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
 
@@ -73,8 +73,8 @@ export default class CanvasStore {
   private valid: boolean = false
   /** Drag Offset between mouse and thing; indicates dragging is happening. */
   private dragoff: Pointed | null = null
-  /** Name of selected Location or Edge, else null. */
-  private _selectedName: string | null = null
+  /** Key of selected Location or Edge, else null. */
+  private _selectedKey: string | null = null
   /** Selected Location | Edge | null. */
   private _selection: Location | Edge | null = null
   /** ID from setInterval in prepCanvas() */
@@ -82,13 +82,13 @@ export default class CanvasStore {
   /** Log of changes to the state; implements undo/redo */
   readonly changelog: ChangeStore
 
-  /** map currently-added Location-names to Locations. */
+  /** map currently-added Location-keys to Locations. */
   private readonly locationMap: Map<string, Location> = new Map()
   /** map currently-added Edge-keys to Edges. */
   private readonly edgeMap: Map<string, Edge> = new Map()
 
-  get selectedName() {
-    return this._selectedName
+  get selectedKey() {
+    return this._selectedKey
   }
 
   get selection() {
@@ -189,16 +189,16 @@ export default class CanvasStore {
   }
 
   addLoc = (loc: Location) => {
-    if (!loc.name) {
+    if (!loc.key) {
       throw new UniquenessError(`Failed to add location ""`)
     }
-    if (loc.name.includes('\t')) {
-      throw new Error("Location name contains illegal character '\\t'")
+    if (loc.key.includes('\t')) {
+      throw new Error("Location key contains illegal character '\\t'")
     }
-    if (this.locationMap.has(loc.name))
-      throw new UniquenessError(`Failed to add duplicate location ${loc.name}`)
+    if (this.locationMap.has(loc.key))
+      throw new UniquenessError(`Failed to add duplicate location ${loc.key}`)
 
-    this.locationMap.set(loc.name, loc)
+    this.locationMap.set(loc.key, loc)
     this.changelog.newAdd(loc)
     this.valid = false
     return true
@@ -206,7 +206,7 @@ export default class CanvasStore {
 
   modLoc = (loc: Readonly<Location>, diff: LocationMutableProps) => {
     let ret = true
-    const L = this.locationMap.get(loc.name)
+    const L = this.locationMap.get(loc.key)
     if (!L) {
       console.debug('modLoc called on unregistered Location')
       return false
@@ -219,16 +219,20 @@ export default class CanvasStore {
     if (diff.shape) {
       const oldShape = L.shape
       if (ShapeMap.hasOwnProperty(diff.shape)) {
-        // TODO
         const shapeClass = ShapeMap[diff.shape]
         if (!shapeClass) {
           console.warn(`ShapeMap[${diff.shape}] -> ${shapeClass}`)
           ret = false
         } else {
           const newShape = L.updateShape(shapeClass)
-          if (newShape)
+          if (newShape) {
             this.changelog.newMutateLoc(L, 'shape', oldShape, newShape)
-          else {
+            // update edges
+            this.edgeMap.forEach(E => {
+              if (E.start === loc) E.connection.start = newShape
+              if (E.end === loc) E.connection.end = newShape
+            })
+          } else {
             ret = false
           }
         }
@@ -251,36 +255,37 @@ export default class CanvasStore {
     return ret
   }
 
-  removeLoc = (locName: string) => {
-    const loc = this.locationMap.get(locName)
+  removeLoc = (locIn: Readonly<Location>) => {
+    const key = locIn.key
+    const loc = this.locationMap.get(key)
     if (!loc) return false
 
-    for (const neighborName of loc.neighborNames) {
-      const neighbor = this.locationMap.get(neighborName)
+    for (const neighborKey of [...loc.neighborKeys]) {
+      const neighbor = this.locationMap.get(neighborKey)
       if (!neighbor) {
-        console.warn(`loc ${locName} has missing neighbor ${neighborName}`)
+        console.warn(`loc ${key} has missing neighbor ${neighborKey}`)
         continue
       }
-      this.removeEdge(loc, neighbor)
+      this.removeEdgePair(loc, neighbor)
     }
 
     this.valid = false
-    if (this.locationMap.delete(locName)) {
+    if (this.locationMap.delete(key)) {
       this.changelog.newRemove(loc)
-      if (this._selectedName === locName) {
+      if (this._selectedKey === key) {
         this.select(null)
       }
       return true
     }
-    console.warn(`Failed to remove location ${locName}; not in locationMap`)
+    console.warn(`Failed to remove location ${key}; not in locationMap`)
     return false
   }
 
   createEdge = (start: Location, end: Location, weight?: number) => {
-    if (start.neighborNames.indexOf(end.name) === -1)
-      start.neighborNames.push(end.name)
-    if (end.neighborNames.indexOf(start.name) === -1)
-      end.neighborNames.push(start.name)
+    if (start.neighborKeys.indexOf(end.key) === -1)
+      start.neighborKeys.push(end.key)
+    if (end.neighborKeys.indexOf(start.key) === -1)
+      end.neighborKeys.push(start.key)
 
     const key = getEdgeKey(start, end)
     if (this.edgeMap.has(key)) return false
@@ -309,16 +314,19 @@ export default class CanvasStore {
     return ret
   }
 
-  removeEdge = (start: Location, end: Location) => {
-    const startNNidx = start.neighborNames.indexOf(end.name)
-    const endNNidx = end.neighborNames.indexOf(start.name)
+  removeEdge = (edge: Readonly<Edge>) =>
+    this.removeEdgePair(edge.start, edge.end)
+
+  removeEdgePair = (start: Location, end: Location) => {
+    const startNNidx = start.neighborKeys.indexOf(end.key)
+    const endNNidx = end.neighborKeys.indexOf(start.key)
     const edgeKey = getEdgeKey(start, end)
     if (startNNidx === -1 || endNNidx === -1) {
       console.warn(`failed to remove edge (${edgeKey}), not in neighbor lists`)
       return false
     }
-    start.neighborNames.splice(startNNidx, 1)
-    end.neighborNames.splice(endNNidx, 1)
+    start.neighborKeys.splice(startNNidx, 1)
+    end.neighborKeys.splice(endNNidx, 1)
     const E = this.edgeMap.get(edgeKey)
     if (!E || !this.edgeMap.delete(edgeKey)) {
       console.warn(`failed to remove edge (${edgeKey}), not in edgeMap`)
@@ -327,7 +335,7 @@ export default class CanvasStore {
     }
 
     this.changelog.newRemove(E)
-    if (this._selectedName === edgeKey) {
+    if (this._selectedKey === edgeKey) {
       this.select(null)
     }
     this.valid = false
@@ -455,31 +463,31 @@ export default class CanvasStore {
   }
 
   select = (
-    keyname: string | null,
+    key: string | null,
     updateReact = true,
     dragoff: Pointed | null = null
   ) => {
     let S: Location | Edge | null | undefined
 
-    if (!keyname) {
+    if (!key) {
       // deselect
       S = null
       this.dragoff = null
-    } else if (keyname.includes('\t')) {
+    } else if (key.includes('\t')) {
       // edge
-      S = this.edgeMap.get(keyname)
+      S = this.edgeMap.get(key)
       this.dragoff = null
     } else {
       // Location
-      S = this.locationMap.get(keyname)
+      S = this.locationMap.get(key)
       this.dragoff = dragoff
     }
     if (S == undefined) {
-      console.debug('select() on unknown key', keyname)
+      console.debug('select() on unknown key', key)
     }
 
     this._selection = S || null
-    this._selectedName = keyname || null
+    this._selectedKey = key || null
 
     this.valid = false
 
@@ -489,16 +497,13 @@ export default class CanvasStore {
   }
 
   createLocAtMouse = (point: Pointed, select = true) => {
-    const name = base64(Date.now() % 1e12) //`(${point.x},${point.y})`
-    const loc = new Location(
-      {name, x: point.x, y: point.y, neighborNames: []},
-      this
-    )
+    const key = b64time()
+    const loc = new Location({key, name: key, x: point.x, y: point.y}, this)
 
     if (!this.addLoc(loc)) return null
 
     if (select) {
-      this.select(name)
+      this.select(key)
     }
 
     return loc
@@ -531,12 +536,12 @@ export default class CanvasStore {
         } else {
           // no edge; create new edge, keep selecting LOCATION
           this.createEdge(prevSelected, selectedLoc)
-          this.select(selectedLoc.name)
+          this.select(selectedLoc.key)
         }
       } else {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         const {x, y} = selectedLoc
-        this.select(selectedLoc.name, false, diffPointed(point, {x, y}))
+        this.select(selectedLoc.key, false, diffPointed(point, {x, y}))
         this.changelog.newGrab(selectedLoc, {x, y})
       }
     } else if (selectedLoc instanceof Edge) {
@@ -549,7 +554,7 @@ export default class CanvasStore {
       if (newLoc) {
         this.createEdge(prevSelected, newLoc)
       }
-    } else if (this.selectedName) {
+    } else if (this.selectedKey) {
       this.select(null)
     }
   }

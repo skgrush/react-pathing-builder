@@ -56,6 +56,7 @@ export default class PropertiesPanel extends React.Component<
             <LocationForm
               selected={this.props.selected}
               modifyLocation={this.props.modifyLocation}
+              deleteLocation={this.props.deleteLocation}
             />
           ) : null}
           {this.props.selected instanceof Edge
