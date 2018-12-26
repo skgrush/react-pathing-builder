@@ -17,7 +17,7 @@ export interface LocationLike {
   y: string | number
   data?: any
 
-  neighborNames: Array<string | number>
+  neighborKeys?: Array<string | number>
 }
 
 export type LocationMutablePropName = 'name' | 'shape'
@@ -37,7 +37,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   private _y: number
   readonly store: CanvasStore
   readonly data: LocationLike & any
-  readonly neighborNames: string[]
+  readonly neighborKeys: string[]
 
   shape: T
   label: Label
@@ -82,9 +82,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     this.store = store
     this.data = data
 
-    this.neighborNames = data.neighborNames
-      ? data.neighborNames.map(String)
-      : []
+    this.neighborKeys = data.neighborKeys ? data.neighborKeys.map(String) : []
 
     this.label = new Label({
       text: this._name,

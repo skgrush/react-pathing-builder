@@ -183,7 +183,7 @@ export default class ChangeStore {
     const prevIgnoreNext = this.ignoreNext
     let ret
     if (C.target instanceof Location) {
-      this.ignoreNext += C.target.neighborNames.length + 1
+      this.ignoreNext += C.target.neighborKeys.length + 1
       ret = this.canvasStore.removeLoc(C.target)
     } else if (C.target instanceof Edge) {
       this.ignoreNext += 1

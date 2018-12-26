@@ -73,8 +73,8 @@ export default class CanvasStore {
   private valid: boolean = false
   /** Drag Offset between mouse and thing; indicates dragging is happening. */
   private dragoff: Pointed | null = null
-  /** Name of selected Location or Edge, else null. */
-  private _selectedName: string | null = null
+  /** Key of selected Location or Edge, else null. */
+  private _selectedKey: string | null = null
   /** Selected Location | Edge | null. */
   private _selection: Location | Edge | null = null
   /** ID from setInterval in prepCanvas() */
@@ -87,8 +87,8 @@ export default class CanvasStore {
   /** map currently-added Edge-keys to Edges. */
   private readonly edgeMap: Map<string, Edge> = new Map()
 
-  get selectedName() {
-    return this._selectedName
+  get selectedKey() {
+    return this._selectedKey
   }
 
   get selection() {
@@ -260,7 +260,7 @@ export default class CanvasStore {
     const loc = this.locationMap.get(key)
     if (!loc) return false
 
-    for (const neighborKey of [...loc.neighborNames]) {
+    for (const neighborKey of [...loc.neighborKeys]) {
       const neighbor = this.locationMap.get(neighborKey)
       if (!neighbor) {
         console.warn(`loc ${key} has missing neighbor ${neighborKey}`)
@@ -272,7 +272,7 @@ export default class CanvasStore {
     this.valid = false
     if (this.locationMap.delete(key)) {
       this.changelog.newRemove(loc)
-      if (this._selectedName === key) {
+      if (this._selectedKey === key) {
         this.select(null)
       }
       return true
@@ -282,10 +282,10 @@ export default class CanvasStore {
   }
 
   createEdge = (start: Location, end: Location, weight?: number) => {
-    if (start.neighborNames.indexOf(end.key) === -1)
-      start.neighborNames.push(end.key)
-    if (end.neighborNames.indexOf(start.key) === -1)
-      end.neighborNames.push(start.key)
+    if (start.neighborKeys.indexOf(end.key) === -1)
+      start.neighborKeys.push(end.key)
+    if (end.neighborKeys.indexOf(start.key) === -1)
+      end.neighborKeys.push(start.key)
 
     const key = getEdgeKey(start, end)
     if (this.edgeMap.has(key)) return false
@@ -318,15 +318,15 @@ export default class CanvasStore {
     this.removeEdgePair(edge.start, edge.end)
 
   removeEdgePair = (start: Location, end: Location) => {
-    const startNNidx = start.neighborNames.indexOf(end.key)
-    const endNNidx = end.neighborNames.indexOf(start.key)
+    const startNNidx = start.neighborKeys.indexOf(end.key)
+    const endNNidx = end.neighborKeys.indexOf(start.key)
     const edgeKey = getEdgeKey(start, end)
     if (startNNidx === -1 || endNNidx === -1) {
       console.warn(`failed to remove edge (${edgeKey}), not in neighbor lists`)
       return false
     }
-    start.neighborNames.splice(startNNidx, 1)
-    end.neighborNames.splice(endNNidx, 1)
+    start.neighborKeys.splice(startNNidx, 1)
+    end.neighborKeys.splice(endNNidx, 1)
     const E = this.edgeMap.get(edgeKey)
     if (!E || !this.edgeMap.delete(edgeKey)) {
       console.warn(`failed to remove edge (${edgeKey}), not in edgeMap`)
@@ -335,7 +335,7 @@ export default class CanvasStore {
     }
 
     this.changelog.newRemove(E)
-    if (this._selectedName === edgeKey) {
+    if (this._selectedKey === edgeKey) {
       this.select(null)
     }
     this.valid = false
@@ -487,7 +487,7 @@ export default class CanvasStore {
     }
 
     this._selection = S || null
-    this._selectedName = key || null
+    this._selectedKey = key || null
 
     this.valid = false
 
@@ -498,10 +498,7 @@ export default class CanvasStore {
 
   createLocAtMouse = (point: Pointed, select = true) => {
     const key = b64time()
-    const loc = new Location(
-      {key, name: key, x: point.x, y: point.y, neighborNames: []},
-      this
-    )
+    const loc = new Location({key, name: key, x: point.x, y: point.y}, this)
 
     if (!this.addLoc(loc)) return null
 
@@ -557,7 +554,7 @@ export default class CanvasStore {
       if (newLoc) {
         this.createEdge(prevSelected, newLoc)
       }
-    } else if (this.selectedName) {
+    } else if (this.selectedKey) {
       this.select(null)
     }
   }
