@@ -8,8 +8,10 @@ import {
 } from '../drawables'
 import {CanvasStyleType, Pointed} from '../interfaces'
 import CanvasStore from './CanvasStore'
+import {b64time} from '../utils'
 
 export interface LocationLike {
+  key?: string | number
   name: string | number
   x: string | number
   y: string | number
@@ -29,6 +31,7 @@ export interface LocationMutableProps {
 }
 
 export default class Location<T extends Shape = Shape> implements LocationLike {
+  readonly key: string
   private _name: string
   private _x: number
   private _y: number
@@ -72,6 +75,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     shapeType?: ShapeSubclass<T>,
     shapeArgs?: object
   ) {
+    this.key = String(data.key) || b64time()
     this._name = String(data.name)
     this._x = +data.x
     this._y = +data.y

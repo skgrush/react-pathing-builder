@@ -20,6 +20,11 @@ const LocationProperties: React.SFC<Props> = (props: Props) => {
   const sname = shape && shape.constructor.name
   return (
     <dl>
+      <dt>key</dt>
+      <dd>
+        <var>{props.selected.key}</var>
+      </dd>
+
       <dt>name</dt>
       <dd>
         <var>{props.selected.name}</var>
