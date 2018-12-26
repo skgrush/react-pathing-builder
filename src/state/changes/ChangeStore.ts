@@ -130,6 +130,7 @@ export default class ChangeStore {
     const C = this.redoStack.pop()
     if (!C) {
       console.debug('Empty redo stack')
+      this.updateReact()
       return false
     }
 
