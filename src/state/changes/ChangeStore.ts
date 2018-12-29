@@ -1,18 +1,21 @@
 import CanvasStore from '../CanvasStore'
+import {Shape} from '../../drawables'
 import Location, {LocationMutablePropName} from '../Location'
 import Edge, {EdgeMutablePropName} from '../Edge'
-import Change, {
-  ChangeSubclass,
+import {
+  Change,
   ChangeAdd,
   ChangeRemove,
   ChangeMutateLoc,
   ChangeMutateEdge,
   ChangeGrab,
   ChangeDrop,
-} from './change'
+} from './Change'
+import {ChangeSubclass} from './interfaces'
 import {ChangeError} from '../../errors'
 import {Pointed} from '../../interfaces'
 import {equalPointed} from '../../utils'
+import {simplifyChanges} from './simplifyChanges'
 
 export default class ChangeStore {
   /** stack of registered changes, never events on top */
@@ -278,64 +281,7 @@ export default class ChangeStore {
     return this._undo(C_grab)
   }
 
-  simplifyChanges = () => {
-    let additions: Change[] = []
-    let removals: Change[] = []
-    let mutations: Change[] = []
-    let moves: Change[] = []
-
-    for (const C of this.sequenceStack) {
-      switch (C.action) {
-        case 'add':
-          additions.push(C)
-          break
-
-        case 'remove':
-          // forget about events that happened to this target, since it's gone.
-          // additions array helps us check if target is new
-          const isNewAdd = additions.some((C2, idx) => {
-            if (C.target !== C2.target) return false
-            additions.splice(idx, 1)
-            return true
-          })
-          mutations = mutations.filter(C2 => C.target !== C2.target)
-          moves = moves.filter(C2 => C.target !== C2.target)
-          // if the target is NOT a new addition, add the removal to the list
-          if (!isNewAdd) {
-            removals.push(C)
-          }
-          break
-
-        case 'mutate-loc':
-        case 'mutate-edge':
-          // forget about similar events that this one overwrites.
-          mutations = mutations.filter(
-            C2 => C.target !== C2.target || C.property !== C2.property
-          )
-          mutations.push(C)
-          break
-
-        case 'drop':
-          moves = moves.filter(C2 => C.target !== C2.target)
-          moves.push(C)
-          break
-
-        case 'grab':
-          break
-
-        default:
-          console.warn('Unexpected Change.action:', (C as any).action, C)
-          break
-      }
-    }
-
-    return {
-      additions,
-      removals,
-      mutations,
-      moves,
-    }
-  }
+  simplifyChanges = () => simplifyChanges(this.sequenceStack)
 
   /**
    * Checks if the preceding 'grab' was at the same place.
