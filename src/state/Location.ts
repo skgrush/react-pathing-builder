@@ -20,6 +20,18 @@ export interface LocationLike {
   neighborKeys?: Array<string | number>
 }
 
+export interface LocationExport {
+  key: string
+  name: string
+  x: number
+  y: number
+  shape: string
+  data: any
+  neighborKeys: Array<string>
+
+  [index: string]: string | number | Array<string>
+}
+
 export type LocationMutablePropName = 'name' | 'shape'
 export type LocationMutablePropType = string
 
@@ -211,6 +223,19 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
         // reset style
         Object.assign(this.shape, {stroke, strokeWidth})
       }
+    }
+  }
+
+  toObject(): LocationExport {
+    const {key, name, x, y, data, neighborKeys} = this
+    return {
+      key,
+      name,
+      x,
+      y,
+      data,
+      shape: this.shape.constructor.name,
+      neighborKeys: [...neighborKeys],
     }
   }
 }

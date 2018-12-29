@@ -13,6 +13,14 @@ export function getEdgeKey(start: Location, end: Location) {
   return [start.key, end.key].sort().join('\t')
 }
 
+export interface EdgeExport {
+  key: string
+  start: string
+  end: string
+  weight: number
+  [index: string]: string | number
+}
+
 export default class Edge {
   readonly start: Location
   readonly end: Location
@@ -41,5 +49,14 @@ export default class Edge {
   set weight(val: number) {
     this._weight = val > 0 ? val : 1
     this.connection.strokeWidth = this._weight * this.store.weightScale
+  }
+
+  toObject(): EdgeExport {
+    return {
+      key: this.key,
+      start: this.start.key,
+      end: this.end.key,
+      weight: this._weight,
+    }
   }
 }

@@ -6,86 +6,26 @@ import Edge, {EdgeMutablePropName, EdgeMutablePropType} from '../Edge'
 import {Shape} from '../../drawables'
 import {Pointed} from '../../interfaces'
 import {ChangeError} from '../../errors'
+import {
+  ActionType,
+  ChangeLike,
+  ChangeAddLike,
+  ChangeDropLike,
+  ChangeGrabLike,
+  ChangeSubclass,
+  ChangeRemoveLike,
+  ChangeMutateLocLike,
+  ChangeMutateEdgeLike,
+} from './interfaces'
 
-export type ActionType =
-  | 'add'
-  | 'remove'
-  | 'mutate-loc'
-  | 'mutate-edge'
-  | 'grab'
-  | 'drop'
-
-/** Union of Change-like interfaces. */
-export type ChangeLike =
-  | ChangeAddLike
-  | ChangeRemoveLike
-  | ChangeMutateLocLike
-  | ChangeMutateEdgeLike
-  | ChangeGrabLike
-  | ChangeDropLike
-
-/** Union of Change Classes. */
-export type ChangeSubclass =
-  | ChangeAdd
-  | ChangeRemove
-  | ChangeMutateLoc
-  | ChangeMutateEdge
-  | ChangeGrab
-  | ChangeDrop
-
-interface ChangeAddLike {
-  action: 'add'
-  timestamp: number
-  target: Location | Edge
-  property?: undefined
-  oldValue?: undefined
-  newValue?: undefined
-}
-
-interface ChangeRemoveLike {
-  action: 'remove'
-  timestamp: number
-  target: Location | Edge
-  property?: undefined
-  oldValue?: undefined
-  newValue?: undefined
-}
-
-interface ChangeMutateLocLike {
-  action: 'mutate-loc'
-  timestamp: number
-  target: Location
-  property: LocationMutablePropName
-  oldValue: LocationMutablePropType
-  newValue: LocationMutablePropType
-}
-
-interface ChangeMutateEdgeLike {
-  action: 'mutate-edge'
-  timestamp: number
-  target: Edge
-  property: EdgeMutablePropName
-  oldValue: EdgeMutablePropType
-  newValue: EdgeMutablePropType
-}
-
-interface ChangeGrabLike {
-  action: 'grab'
-  timestamp: number
-  target: Location
-  property?: undefined
-  oldValue: Pointed
-  newValue?: undefined
-}
-
-interface ChangeDropLike {
-  action: 'drop'
-  timestamp: number
-  target: Location
-  property?: undefined
-  oldValue?: undefined
-  newValue: Pointed
-}
+// export type Change = {
+//   Add: typeof ChangeAdd
+//   Remove: typeof ChangeRemove
+//   MutateLoc: typeof ChangeMutateLoc
+//   MutateEdge: typeof ChangeMutateEdge
+//   Grab: typeof ChangeGrab
+//   Drop: typeof ChangeDrop
+// }
 
 /**
  * The abstract Change class itself.
@@ -95,7 +35,7 @@ interface ChangeDropLike {
  * Constructing a class shouldn't have any side effects other than adding
  * a reference to the member properties.
  */
-export default abstract class Change {
+export abstract class Change {
   readonly action: ActionType
   readonly timestamp: number
   readonly target: Location | Edge
