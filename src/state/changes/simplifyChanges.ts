@@ -1,9 +1,9 @@
-import Location, {LocationExport} from '../Location'
+import Location, {LocationExport, LocationMutablePropName} from '../Location'
 import {Change} from './Change'
 import {ChangeSubclass} from './interfaces'
 import {ChangeError} from '../../errors'
 import {Shape} from '../../drawables/shapes'
-import Edge, {EdgeExport} from '../Edge'
+import Edge, {EdgeExport, EdgeMutablePropName} from '../Edge'
 
 type _MutateChange = Change & {action: 'mutate-loc' | 'mutate-edge'}
 type _DropChange = Change & {action: 'drop'}
@@ -151,16 +151,16 @@ function processMutation(this: void, added: EitherExport[], C: _MutateChange) {
 
   // for new Locations/Edges, apply changes and filter out mutation
   if ('neighborKeys' in C_added && C.target instanceof Location) {
-    if (C_added[C.property] !== C.newValue) {
+    if (C_added[C.property as LocationMutablePropName] !== C.newValue) {
       if (C.property === 'shape' && C.newValue instanceof Shape) {
         C_added['shape'] = C.newValue.constructor.name
       } else {
-        C_added[C.property] = C.newValue
+        C_added[C.property as LocationMutablePropName] = C.newValue
       }
     }
   } else if ('weight' in C_added && C.target instanceof Edge) {
-    if (C_added[C.property] !== C.newValue) {
-      C_added[C.property] = C.newValue
+    if (C_added[C.property as EdgeMutablePropName] !== C.newValue) {
+      C_added[C.property as EdgeMutablePropName] = C.newValue
     }
   } else {
     console.error('C:', C, 'C_added:', C_added)

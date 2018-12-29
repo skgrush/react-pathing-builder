@@ -25,11 +25,15 @@ export interface LocationExport {
   name: string
   x: number
   y: number
-  shape: string
+  shape: string // shape name
   data: any
-  neighborKeys: Array<string>
+  neighborKeys: Array<string> // array of Location keys
 
-  [index: string]: string | number | Array<string>
+  ['key']: string
+  ['name']: string
+  ['x']: number
+  ['y']: number
+  ['shape']: string
 }
 
 export type LocationMutablePropName = 'name' | 'shape'

@@ -18,7 +18,11 @@ export interface EdgeExport {
   start: string
   end: string
   weight: number
-  [index: string]: string | number
+
+  ['key']: string
+  ['start']: string
+  ['end']: string
+  ['weight']: number
 }
 
 export default class Edge {
