@@ -1,9 +1,10 @@
-import Location, {LocationExport, LocationMutablePropName} from '../Location'
+import Location, {LocationMutablePropName} from '../Location'
 import {Change} from './Change'
-import {ChangeSubclass, ChangeInstance} from './interfaces'
+import {ChangeSubclass, ChangeInstance} from '../../interfaces'
 import {ChangeError} from '../../errors'
 import {Shape} from '../../drawables/shapes'
-import Edge, {EdgeExport, EdgeMutablePropName} from '../Edge'
+import Edge, {EdgeMutablePropName} from '../Edge'
+import {LocationExport, EdgeExport} from '../../interfaces'
 
 type _MutateChange = Change & {action: 'mutate-loc' | 'mutate-edge'}
 type _DropChange = Change & {action: 'drop'}

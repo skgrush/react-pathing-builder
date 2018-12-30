@@ -9,6 +9,7 @@ import {
 import {CanvasStyleType, Pointed} from '../interfaces'
 import CanvasStore from './CanvasStore'
 import {b64time} from '../utils'
+import {LocationExport} from '../interfaces'
 
 export interface LocationLike {
   key?: string | number
@@ -18,23 +19,6 @@ export interface LocationLike {
   data?: any
 
   neighborKeys?: Array<string | number>
-}
-
-export interface LocationExport {
-  type: 'Location'
-  key: string
-  name: string
-  x: number
-  y: number
-  shape: string // shape name
-  data: any
-  neighborKeys: Array<string> // array of Location keys
-
-  ['key']: string
-  ['name']: string
-  ['x']: number
-  ['y']: number
-  ['shape']: string
 }
 
 export type LocationMutablePropName = 'name' | 'shape'

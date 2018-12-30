@@ -17,7 +17,7 @@ import {
   ChangeRemoveLike,
   ChangeMutateLocLike,
   ChangeMutateEdgeLike,
-} from './interfaces'
+} from '../../interfaces'
 
 // export type Change = {
 //   Add: typeof ChangeAdd

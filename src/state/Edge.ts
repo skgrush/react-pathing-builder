@@ -1,6 +1,7 @@
 import Location from './Location'
 import CanvasStore from './CanvasStore'
 import {Connection} from '../drawables'
+import {EdgeExport} from '../interfaces'
 
 export type EdgeMutablePropName = 'weight'
 export type EdgeMutablePropType = number
@@ -11,19 +12,6 @@ export interface EdgeMutable {
 
 export function getEdgeKey(start: Location, end: Location) {
   return [start.key, end.key].sort().join('\t')
-}
-
-export interface EdgeExport {
-  type: 'Edge'
-  key: string
-  start: string
-  end: string
-  weight: number
-
-  ['key']: string
-  ['start']: string
-  ['end']: string
-  ['weight']: number
 }
 
 export default class Edge {

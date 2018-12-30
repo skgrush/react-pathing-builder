@@ -6,13 +6,13 @@ import {
   ChangeMutateEdge,
   ChangeGrab,
   ChangeDrop,
-} from './change'
+} from '../state/changes/Change'
 import Location, {
   LocationMutablePropName,
   LocationMutablePropType,
-} from '../Location'
-import Edge, {EdgeMutablePropName, EdgeMutablePropType} from '../Edge'
-import {Pointed} from '../../interfaces'
+} from '../state/Location'
+import Edge, {EdgeMutablePropName, EdgeMutablePropType} from '../state/Edge'
+import {Pointed} from './geometry'
 
 /**
  * @module changes/interfaces

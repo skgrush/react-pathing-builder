@@ -11,7 +11,7 @@ import {
   ChangeGrab,
   ChangeDrop,
 } from './Change'
-import {ChangeSubclass, ChangeInstance} from './interfaces'
+import {ChangeSubclass, ChangeInstance} from '../../interfaces'
 import {ChangeError} from '../../errors'
 import {Pointed} from '../../interfaces'
 import {equalPointed} from '../../utils'
