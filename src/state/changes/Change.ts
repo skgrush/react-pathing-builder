@@ -13,6 +13,7 @@ import {
   ChangeDropLike,
   ChangeGrabLike,
   ChangeSubclass,
+  ChangeInstance,
   ChangeRemoveLike,
   ChangeMutateLocLike,
   ChangeMutateEdgeLike,
@@ -73,7 +74,7 @@ export abstract class Change {
   static new(C: ChangeDropLike): ChangeDrop
   static new(C: ChangeGrabLike): ChangeGrab
   // generate a new Change based on the 'action' key
-  static new(C: ChangeLike): ChangeSubclass {
+  static new(C: ChangeLike): ChangeInstance {
     switch (C.action) {
       case 'add':
         return new ChangeAdd(C)
@@ -93,7 +94,7 @@ export abstract class Change {
   }
 
   /** create a new Change in the opposite type of Change from the input */
-  static flip(C: ChangeLike | ChangeSubclass) {
+  static flip(C: ChangeLike | ChangeInstance) {
     switch (C.action) {
       case 'add':
         return ChangeAdd.flip(C)

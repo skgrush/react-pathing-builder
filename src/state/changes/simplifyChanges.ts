@@ -1,6 +1,6 @@
 import Location, {LocationExport, LocationMutablePropName} from '../Location'
 import {Change} from './Change'
-import {ChangeSubclass} from './interfaces'
+import {ChangeSubclass, ChangeInstance} from './interfaces'
 import {ChangeError} from '../../errors'
 import {Shape} from '../../drawables/shapes'
 import Edge, {EdgeExport, EdgeMutablePropName} from '../Edge'
@@ -30,12 +30,13 @@ export interface ExportStruct {
 
 /**
  * Reduce a sequence of Changes to a minimal current-state description.
+ *
  * Returns an object containing newly-added and -removed Export objects,
  * as well as Change-object arrays for mutations and moves performed on
  * non-new Locations|Edges.
  * No side-effects and no modifications, just returns an ExportStruct.
  */
-export function simplifyChanges(sequenceStack: ChangeSubclass[]) {
+export function simplifyChanges(sequenceStack: ChangeInstance[]) {
   return objectifyChanges(reduceChangeSequence(sequenceStack))
 }
 
@@ -44,7 +45,7 @@ export function simplifyChanges(sequenceStack: ChangeSubclass[]) {
  * 'mutations', and 'moves', while dropping any redundant Changes.
  * No Side-effects and no modifications, just returns a ChangeStruct.
  */
-export function reduceChangeSequence(sequenceStack: ChangeSubclass[]) {
+export function reduceChangeSequence(sequenceStack: ChangeInstance[]) {
   const CS: ChangeStruct = {
     additions: [],
     removals: [],
@@ -52,7 +53,7 @@ export function reduceChangeSequence(sequenceStack: ChangeSubclass[]) {
     moves: [],
   }
 
-  // add changes into the above arrays of changes
+  // Starting at the bottom of the stack (oldest), add changes into the above arrays of changes depending on the state.
   for (const C of sequenceStack) {
     switch (C.action) {
       case 'add':
@@ -150,7 +151,7 @@ function processMutation(this: void, added: EitherExport[], C: _MutateChange) {
   if (!C_added) return true
 
   // for new Locations/Edges, apply changes and filter out mutation
-  if ('neighborKeys' in C_added && C.target instanceof Location) {
+  if (C_added.type === 'Location' && C.target instanceof Location) {
     if (C_added[C.property as LocationMutablePropName] !== C.newValue) {
       if (C.property === 'shape' && C.newValue instanceof Shape) {
         C_added['shape'] = C.newValue.constructor.name
@@ -158,13 +159,13 @@ function processMutation(this: void, added: EitherExport[], C: _MutateChange) {
         C_added[C.property as LocationMutablePropName] = C.newValue
       }
     }
-  } else if ('weight' in C_added && C.target instanceof Edge) {
+  } else if (C_added.type === 'Edge' && C.target instanceof Edge) {
     if (C_added[C.property as EdgeMutablePropName] !== C.newValue) {
       C_added[C.property as EdgeMutablePropName] = C.newValue
     }
   } else {
     console.error('C:', C, 'C_added:', C_added)
-    throw new ChangeError('processMutation expected ')
+    throw new ChangeError(`Mismatched objects, ${C.action}/${C_added.type}`)
   }
   return false
 }

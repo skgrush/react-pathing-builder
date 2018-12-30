@@ -11,7 +11,7 @@ import {
   ChangeGrab,
   ChangeDrop,
 } from './Change'
-import {ChangeSubclass} from './interfaces'
+import {ChangeSubclass, ChangeInstance} from './interfaces'
 import {ChangeError} from '../../errors'
 import {Pointed} from '../../interfaces'
 import {equalPointed} from '../../utils'
@@ -19,9 +19,9 @@ import {simplifyChanges} from './simplifyChanges'
 
 export default class ChangeStore {
   /** stack of registered changes, never events on top */
-  private readonly sequenceStack: Array<ChangeSubclass> = []
+  private readonly sequenceStack: Array<ChangeInstance> = []
   /** stack of undone changes, ready to be redo-ne */
-  private readonly redoStack: Array<ChangeSubclass> = []
+  private readonly redoStack: Array<ChangeInstance> = []
   /** reference back to the parent CanvasStore instance */
   readonly canvasStore: CanvasStore
   /** counter for preventing undo's from adding new changes */
@@ -118,7 +118,7 @@ export default class ChangeStore {
     )
   }
 
-  private _newChange = (C: ChangeSubclass) => {
+  private _newChange = (C: ChangeInstance) => {
     if (this.ignoreNext <= 0) {
       this.redoStack.length = 0 // remove undo stack when new change happens
       this.sequenceStack.push(C)
@@ -162,7 +162,7 @@ export default class ChangeStore {
     return this._undo(C)
   }
 
-  private _undo = (C: ChangeSubclass) => {
+  private _undo = (C: ChangeInstance) => {
     this.updateReact()
     switch (C.action) {
       case 'add':

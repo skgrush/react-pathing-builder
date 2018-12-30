@@ -21,6 +21,7 @@ export interface LocationLike {
 }
 
 export interface LocationExport {
+  type: 'Location'
   key: string
   name: string
   x: number
@@ -233,6 +234,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   toObject(): LocationExport {
     const {key, name, x, y, data, neighborKeys} = this
     return {
+      type: 'Location',
       key,
       name,
       x,

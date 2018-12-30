@@ -1,4 +1,5 @@
 import {
+  Change,
   ChangeAdd,
   ChangeRemove,
   ChangeMutateLoc,
@@ -36,13 +37,17 @@ export type ChangeLike =
   | ChangeDropLike
 
 /** Union of Change Classes. */
-export type ChangeSubclass =
+export type ChangeInstance =
   | ChangeAdd
   | ChangeRemove
   | ChangeMutateLoc
   | ChangeMutateEdge
   | ChangeGrab
   | ChangeDrop
+
+export interface ChangeSubclass<CLS extends Change = Change> {
+  new (...args: [CLS, ...any[]]): CLS
+}
 
 export interface ChangeAddLike {
   action: 'add'

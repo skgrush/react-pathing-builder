@@ -14,6 +14,7 @@ export function getEdgeKey(start: Location, end: Location) {
 }
 
 export interface EdgeExport {
+  type: 'Edge'
   key: string
   start: string
   end: string
@@ -57,6 +58,7 @@ export default class Edge {
 
   toObject(): EdgeExport {
     return {
+      type: 'Edge',
       key: this.key,
       start: this.start.key,
       end: this.end.key,
