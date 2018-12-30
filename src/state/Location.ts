@@ -92,8 +92,8 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     shapeType?: ShapeSubclass<T>,
     shapeArgs?: object
   ) {
-    this.key = String(data.key) || b64time()
-    this._name = String(data.name)
+    this.key = data.key ? String(data.key) : b64time()
+    this._name = data.name ? String(data.name) : this.key
     this._x = +data.x
     this._y = +data.y
     this.store = store
@@ -108,26 +108,10 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
       ...this.store.labelStyleGetter(this),
     })
 
-    if (shapeType) {
-      console.info('Have shapeType:', shapeType)
-      this.shape = new shapeType(Object.assign(
-        {
-          x: this.x,
-          y: this.y,
-        },
-        shapeArgs
-      ) as any) as T
-    } else {
-      const tmpShape = this.updateShape()
-      console.info('No shapeType:', tmpShape)
-      if (tmpShape) this.shape = tmpShape
-      else
-        this.shape = (new Circle({
-          radius: 5,
-          x: this.x,
-          y: this.y,
-        }) as unknown) as T
-    }
+    if (!shapeType && data.data && typeof data.data.shape === 'string')
+      shapeType = ShapeMap[data.data.shape]
+
+    this.shape = this.updateShape(shapeType, shapeArgs)
 
     this.label.offset = this.calculateLabelOffset()
   }
@@ -139,6 +123,9 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     this.label.moveTo(this._x, this._y)
   }
 
+  /**
+   * update Shape style according to store.locStyleGetter()
+   */
   updateStyle = () => {
     const style = this.store.locStyleGetter(this)
     if (style.hasOwnProperty('fill')) {
@@ -171,19 +158,22 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     }
     console.info('updateShape:', shapeClass, opts)
 
-    if (this.shape instanceof shapeClass) return false
-    if (!shapeClass) {
-      console.warn(`Received ${shapeClass} from locShapeGetter()`)
-      return false
+    if (!shapeClass || this.shape instanceof shapeClass) {
+      // default shape setter
+      if (!shapeClass)
+        this.shape = (new Circle({
+          radius: 5,
+          x: this.x,
+          y: this.y,
+        }) as unknown) as T
+    } else {
+      //Use shapeClass to build a new shape
+      const current = this.shape || {x: this.x, y: this.y}
+      const shapeArgs = opts
+        ? Object.assign({}, current, opts)
+        : Object.assign({}, CanvasStore.defaultShapeProperties(), current)
+      this.shape = new shapeClass(shapeArgs) as T
     }
-
-    const current = this.shape || {x: this.x, y: this.y}
-
-    if (!opts)
-      this.shape = new shapeClass(
-        Object.assign({}, CanvasStore.defaultShapeProperties(), current)
-      ) as T
-    else this.shape = new shapeClass(Object.assign({}, current, opts)) as T
 
     this.updateStyle()
     return this.shape
