@@ -7,6 +7,9 @@ interface State {
   imgSrc: string | null
 }
 
+const DEFAULT =
+  'https://upload.wikimedia.org/wikipedia/commons/1/17/BlankMap-World-noborders.png'
+
 class App extends React.Component<any, State> {
   state: State = {imgSrc: null}
 
@@ -23,9 +26,15 @@ class App extends React.Component<any, State> {
   }
 
   render() {
+    console.log(this.state)
     return (
       <main>
         <input ref="upload" type="file" onChange={this.onChange} />
+        <input
+          type="button"
+          onClick={() => this.setState({imgSrc: DEFAULT})}
+          value="Default Img"
+        />
         {this.state.imgSrc && (
           <PathingBuilder className="funybuilder" mapSrc={this.state.imgSrc} />
         )}
