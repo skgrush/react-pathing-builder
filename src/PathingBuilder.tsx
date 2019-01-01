@@ -1,7 +1,7 @@
 import * as React from 'react'
 
 import {Pointed, StateButtonBoxProps, PropertiesPanelProps} from './interfaces'
-import {StateButtonBox, PropertiesPanel} from './components'
+import {StateButtonBox, PropertiesPanel, ChangesExporter} from './components'
 import CanvasStore from './state/CanvasStore'
 import {loadMapSrc, fitBoxInBox} from './utils'
 
@@ -215,6 +215,10 @@ class PathingBuilder extends React.Component<Props, State> {
           width={mapImg.width || undefined}
           height={mapImg.height || undefined}
         />
+
+        {this.state.store && (
+          <ChangesExporter changelog={this.state.store.changelog} />
+        )}
       </div>
     )
   }

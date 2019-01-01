@@ -37,6 +37,11 @@ export default class ChangeStore {
     return this.redoStack.length
   }
 
+  get lastChange() {
+    const L = this.sequenceStack.length
+    return L ? this.sequenceStack[L - 1] : null
+  }
+
   constructor(
     canvasStore: CanvasStore,
     updateReact: (cb?: () => void) => void
@@ -44,6 +49,8 @@ export default class ChangeStore {
     this.canvasStore = canvasStore
     this.updateReact = updateReact
   }
+
+  exportData = () => simplifyChanges(this.sequenceStack)
 
   /**
    * Record an ChangeAdd in the store about a target being added.

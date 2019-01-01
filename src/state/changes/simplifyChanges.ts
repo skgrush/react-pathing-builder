@@ -1,6 +1,11 @@
 import Location, {LocationMutablePropName} from '../Location'
 import {Change} from './Change'
-import {ChangeSubclass, ChangeInstance} from '../../interfaces'
+import {
+  ChangeSubclass,
+  ChangeInstance,
+  ModExport,
+  MoveExport,
+} from '../../interfaces'
 import {ChangeError} from '../../errors'
 import {Shape} from '../../drawables/shapes'
 import Edge, {EdgeMutablePropName} from '../Edge'
@@ -25,8 +30,8 @@ type EitherExport = LocationExport | EdgeExport
 export interface ExportStruct {
   added: EitherExport[]
   removed: EitherExport[]
-  modded: _MutateChange[]
-  moved: _DropChange[]
+  modded: ModExport[]
+  moved: MoveExport[]
 }
 
 /**
@@ -93,8 +98,27 @@ export function objectifyChanges(CS: ChangeStruct): ExportStruct {
   return {
     added,
     removed: removals.map(objectifier),
-    modded: mutations.filter(processMutation.bind(void 0, added)),
-    moved: moves.filter(processMove.bind(void 0, added)),
+    modded: mutations.filter(processMutation.bind(void 0, added)).map(toModExp),
+    moved: moves.filter(processMove.bind(void 0, added)).map(toMoveExp),
+  }
+}
+
+function toModExp(C: _MutateChange): ModExport {
+  const {property, oldValue, newValue} = C
+  return {
+    type: 'mod',
+    target: C.target.key,
+    property: property as LocationMutablePropName | EdgeMutablePropName,
+    oldValue,
+    newValue,
+  }
+}
+function toMoveExp(C: _DropChange): MoveExport {
+  const {target, newValue} = C
+  return {
+    type: 'move',
+    target: target.key,
+    newValue,
   }
 }
 
