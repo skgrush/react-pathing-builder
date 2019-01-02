@@ -11,8 +11,11 @@ import {
   LocationStyler,
   LocationShaper,
   LabelStyler,
+  LocationExport,
+  EdgeExport,
+  ExportSimple,
 } from '../interfaces'
-import {diffPointed, b64time} from '../utils'
+import {diffPointed, b64time, addPointed} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
 
@@ -137,11 +140,21 @@ export default class CanvasStore {
    * Returns a 2-tuple, the numerator/denominator of the fraction of successful
    * loads of Locations and Edges.
    */
-  loadData = (data: any): [number, number] => {
+  loadData = (data: ExportSimple | any[]): [number, number] => {
     this.clear()
     if (!data) return [0, 0]
-    if (!Array.isArray(data)) return [+this._loadLoc(data), 1]
+    if (!Array.isArray(data)) {
+      // data's not an array, but it is truthy
+      if (data.hasOwnProperty('locations') && data.hasOwnProperty('edges')) {
+        // data's probably an ExportSimple
+        return this.importData(data)
+      } else {
+        // I don't know what data is. Just try importing it as a Location
+        return [+this._loadLoc(data), 1]
+      }
+    }
 
+    // data is definitely an array. Pull out the Edges, load the Locations
     const edgeLikes: EdgeLike[] = []
     let successCount = 0,
       totalCount = 0
@@ -154,6 +167,7 @@ export default class CanvasStore {
       }
     }
     console.debug(`Loaded ${successCount} of ${totalCount} Locations.`)
+    // now that the Locations are presumably loaded, load the Edges
     for (const edgey of edgeLikes) {
       successCount += +this._loadEdge(edgey)
       totalCount += 1
@@ -163,6 +177,40 @@ export default class CanvasStore {
     )
 
     return [successCount, totalCount]
+  }
+
+  /**
+   * Import data from a more strict ExportSimple object like from exportData()
+   */
+  importData = ({locations, edges}: ExportSimple): [number, number] => {
+    let successCount = 0,
+      totalCount = 0
+
+    if (Array.isArray(locations)) {
+      for (const loc of locations) {
+        successCount += +this._loadLoc(loc)
+        totalCount += 1
+      }
+    }
+    if (Array.isArray(edges)) {
+      for (const edge of edges) {
+        successCount += +this._loadEdge(edge)
+        totalCount += 1
+      }
+    }
+
+    return [successCount, totalCount]
+  }
+
+  exportData = (): ExportSimple => {
+    const locations = this.locationMap.size
+      ? [...this.locationMap.values()].map(L => L.toObject())
+      : []
+    const edges = this.edgeMap.size
+      ? [...this.edgeMap.values()].map(E => E.toObject())
+      : []
+
+    return {locations, edges}
   }
 
   /**
@@ -697,24 +745,36 @@ export default class CanvasStore {
 
   /**
    * Find the coordinates of the mouse relative to the canvas.
-   *
    */
   private _findMouse = (e: MouseEvent): Pointed => {
     const {currentTarget, pageX, pageY} = e
-    var element = currentTarget as HTMLElement | null,
+
+    /**
+     * popular pattern for getting offset relative to an element from
+     * its ancestor elements.
+     */
+    let element = currentTarget as HTMLElement | null,
       offsetX = 0,
       offsetY = 0
-
     while (element) {
       offsetX += element.offsetLeft
       offsetY += element.offsetTop
       element = element.offsetParent as HTMLElement | null
     }
 
-    return {
+    /**
+     * where the mouse is relative to the canvas, NOT accounting for the
+     * offset from the canvas's padding and border sizes.
+     **/
+    const point = {
       x: pageX - offsetX,
       y: pageY - offsetY,
     }
+
+    if (this.pixelOffset) {
+      return diffPointed(point, this.pixelOffset)
+    }
+    return point
   }
 
   static defaultLabelStyler(loc: Readonly<Location>) {

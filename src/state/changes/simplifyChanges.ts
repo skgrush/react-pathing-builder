@@ -5,6 +5,8 @@ import {
   ChangeInstance,
   ModExport,
   MoveExport,
+  ExportStruct,
+  ObjectExport,
 } from '../../interfaces'
 import {ChangeError} from '../../errors'
 import {Shape} from '../../drawables/shapes'
@@ -23,15 +25,6 @@ interface ChangeStruct {
   removals: Change[]
   mutations: _MutateChange[]
   moves: _DropChange[]
-}
-
-type EitherExport = LocationExport | EdgeExport
-
-export interface ExportStruct {
-  added: EitherExport[]
-  removed: EitherExport[]
-  modded: ModExport[]
-  moved: MoveExport[]
 }
 
 /**
@@ -168,7 +161,7 @@ function reduceDrop(CS: ChangeStruct, C: _DropChange) {
  * were used to update an Export in 'added'.
  * Basically a filter with side-effects.
  */
-function processMutation(this: void, added: EitherExport[], C: _MutateChange) {
+function processMutation(this: void, added: ObjectExport[], C: _MutateChange) {
   if (!C.property)
     throw new ChangeError(`Bad ${C.action} as mutation with no property`)
   if (C.action !== 'mutate-loc' && C.action !== 'mutate-edge')
@@ -202,7 +195,7 @@ function processMutation(this: void, added: EitherExport[], C: _MutateChange) {
 /**
  * Update newly 'added' Exports with the move-Change 'C' if-and-only-if new.
  */
-function processMove(this: void, added: EitherExport[], C: _DropChange) {
+function processMove(this: void, added: ObjectExport[], C: _DropChange) {
   if (C.action !== 'drop')
     throw new ChangeError(`Bad ${C.action}, expected a 'drop' in moves list`)
 

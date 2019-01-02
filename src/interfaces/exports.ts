@@ -49,3 +49,17 @@ export interface EdgeExport {
   ['end']: string
   ['weight']: number
 }
+
+export type ObjectExport = LocationExport | EdgeExport
+
+export interface ExportStruct {
+  added: ObjectExport[]
+  removed: ObjectExport[]
+  modded: ModExport[]
+  moved: MoveExport[]
+}
+
+export interface ExportSimple {
+  locations: LocationExport[]
+  edges: EdgeExport[]
+}
