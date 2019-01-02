@@ -6,12 +6,31 @@ import {EdgeExport} from '../interfaces'
 export type EdgeMutablePropName = 'weight'
 export type EdgeMutablePropType = number
 
+export interface EdgeLike {
+  start: string | number // Location key
+  end: string | number // Location key
+  weight?: number
+}
+
 export interface EdgeMutable {
   weight?: number
 }
 
 export function getEdgeKey(start: Location, end: Location) {
   return [start.key, end.key].sort().join('\t')
+}
+
+export function isEdgeLike(data: any): data is EdgeLike {
+  if (!data) return false
+  const startT = typeof data.start
+  if (!data.start || (startT !== 'string' && startT !== 'number')) return false
+  const endT = typeof data.end
+  if (!data.end || (endT !== 'string' && endT !== 'number')) return false
+  if (data.hasOwnProperty('weight')) {
+    const weightT = typeof data.weight
+    return weightT === 'number' || weightT === 'undefined'
+  }
+  return true
 }
 
 export default class Edge {

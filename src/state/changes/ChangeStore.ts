@@ -50,7 +50,12 @@ export default class ChangeStore {
     this.updateReact = updateReact
   }
 
-  exportData = () => simplifyChanges(this.sequenceStack)
+  exportChanges = () => simplifyChanges(this.sequenceStack)
+
+  clear = () => {
+    this.sequenceStack.length = 0
+    this.redoStack.length = 0
+  }
 
   /**
    * Record an ChangeAdd in the store about a target being added.

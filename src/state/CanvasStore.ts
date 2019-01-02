@@ -1,5 +1,9 @@
-import Location, {LocationLike, LocationMutableProps} from './Location'
-import Edge, {getEdgeKey, EdgeMutable} from './Edge'
+import Location, {
+  LocationLike,
+  LocationMutableProps,
+  isLocationLike,
+} from './Location'
+import Edge, {getEdgeKey, EdgeMutable, EdgeLike, isEdgeLike} from './Edge'
 import {Star, Shape, ShapeMap, ShapeSubclass, ShapeParams} from '../drawables'
 import {
   Pointed,
@@ -127,9 +131,50 @@ export default class CanvasStore {
     if (this.valid) this.valid = false
   }
 
-  loadData = (data: any) => {
-    // TODO
-    throw 'loadData not implemented'
+  /**
+   * Takes an (arbitrarily-ordered) array of LocationLike and EdgeLike objects
+   * and adds them to a freshly-cleared CanvasStore.
+   * Returns a 2-tuple, the numerator/denominator of the fraction of successful
+   * loads of Locations and Edges.
+   */
+  loadData = (data: any): [number, number] => {
+    this.clear()
+    if (!data) return [0, 0]
+    if (!Array.isArray(data)) return [+this._loadLoc(data), 1]
+
+    const edgeLikes: EdgeLike[] = []
+    let successCount = 0,
+      totalCount = 0
+    for (const datum of data) {
+      if (isEdgeLike(datum)) {
+        edgeLikes.push(datum)
+      } else {
+        successCount += +this._loadLoc(datum)
+        totalCount += 1
+      }
+    }
+    console.debug(`Loaded ${successCount} of ${totalCount} Locations.`)
+    for (const edgey of edgeLikes) {
+      successCount += +this._loadEdge(edgey)
+      totalCount += 1
+    }
+    console.debug(
+      `loadData() loaded ${successCount} of ${totalCount} Locations and Edges.`
+    )
+
+    return [successCount, totalCount]
+  }
+
+  /**
+   * Wipe all data loaded into the stores and clear the canvas.
+   */
+  clear = () => {
+    this.locationMap.clear()
+    this.edgeMap.clear()
+
+    this.changelog.clear()
+
+    this.clearCanvas()
   }
 
   /**
@@ -397,7 +442,7 @@ export default class CanvasStore {
     this.valid = false
   }
 
-  private clear = (ctx: CanvasRenderingContext2D | null = null) => {
+  private clearCanvas(ctx: CanvasRenderingContext2D | null = null) {
     if (!ctx) ctx = this.canvas.getContext('2d')
     if (ctx) ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }
@@ -414,7 +459,7 @@ export default class CanvasStore {
 
     const ctx = this.canvas.getContext('2d')
     if (!ctx) return
-    this.clear(ctx)
+    this.clearCanvas(ctx)
 
     if (this.img) ctx.drawImage(this.img, 0, 0)
 
@@ -454,6 +499,67 @@ export default class CanvasStore {
       }
     } else {
       edge.connection.draw(ctx)
+    }
+  }
+
+  /**
+   * Try to load an EdgeLike into the store WITHOUT adding to the changelog.
+   * Returns `true` on success, returns `false` and prints an error to console
+   * on failure.
+   */
+  private _loadEdge = (edge: EdgeLike | any) => {
+    const start = this.locationMap.get(String(edge.start))
+    const end = this.locationMap.get(String(edge.end))
+    if (!start || !end) {
+      console.error(
+        'start or end Location not found in locationMap.',
+        'Edge:',
+        edge,
+        '; start:',
+        start,
+        '; end:',
+        end
+      )
+      return false
+    } else {
+      // Add the Edge, but DON'T add a changelog entry
+      const succ = this.createEdge(start, end, edge.weight, false)
+      if (!succ) {
+        console.error('Edge apparently already exists', edge)
+      }
+      return succ
+    }
+  }
+
+  /**
+   * Try to load a LocationLike into the store WITHOUT adding to the changelog.
+   * Returns: `true` on success, `false` and prints error on failure.
+   */
+  private _loadLoc = (something: LocationLike | any) => {
+    if (!isLocationLike(something)) {
+      console.error('Non-LocationLike object:', something)
+      return false
+    }
+    if (!something.key) {
+      // missing key name
+      const name = String(something.name)
+      if (this.locationMap.has(name)) {
+        console.error(
+          "LocationLike object is missing 'key', but 'name' " +
+            'value is already in locationMap:',
+          something
+        )
+        return false
+      } else {
+        something.key = name
+      }
+    }
+    try {
+      // Add the Location, but DON'T add a changelog entry
+      return this.addLoc(new Location(something, this), false)
+    } catch (e) {
+      console.error(e)
+      return false
     }
   }
 

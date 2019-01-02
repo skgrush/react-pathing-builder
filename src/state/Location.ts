@@ -31,6 +31,19 @@ export interface LocationMutableProps {
   shape?: string
 }
 
+export function isLocationLike(data: LocationLike): data is LocationLike {
+  if (!data) return false
+  for (const V of [data.name, data.x, data.y]) {
+    const VT = typeof V
+    if (!V || (VT !== 'string' && VT !== 'number')) return false
+  }
+  if (data.hasOwnProperty('key')) {
+    const keyT = typeof data.key
+    return keyT === 'string' || keyT === 'number' || keyT === 'undefined'
+  }
+  return true
+}
+
 export default class Location<T extends Shape = Shape> implements LocationLike {
   readonly key: string
   private _name: string
