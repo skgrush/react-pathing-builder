@@ -233,7 +233,7 @@ export default class CanvasStore {
     this.valid = false
   }
 
-  addLoc = (loc: Location) => {
+  addLoc = (loc: Location, doAddChange: boolean = true) => {
     if (!loc.key) {
       throw new UniquenessError(`Failed to add location ""`)
     }
@@ -244,7 +244,7 @@ export default class CanvasStore {
       throw new UniquenessError(`Failed to add duplicate location ${loc.key}`)
 
     this.locationMap.set(loc.key, loc)
-    this.changelog.newAdd(loc)
+    if (doAddChange) this.changelog.newAdd(loc)
     this.valid = false
     return true
   }
@@ -326,7 +326,12 @@ export default class CanvasStore {
     return false
   }
 
-  createEdge = (start: Location, end: Location, weight?: number) => {
+  createEdge = (
+    start: Location,
+    end: Location,
+    weight?: number,
+    doAddChange: boolean = true
+  ) => {
     if (start.neighborKeys.indexOf(end.key) === -1)
       start.neighborKeys.push(end.key)
     if (end.neighborKeys.indexOf(start.key) === -1)
@@ -337,7 +342,7 @@ export default class CanvasStore {
 
     const E = new Edge(start, end, this, weight)
     this.edgeMap.set(key, E)
-    this.changelog.newAdd(E)
+    if (doAddChange) this.changelog.newAdd(E)
     this.valid = false
     return true
   }
