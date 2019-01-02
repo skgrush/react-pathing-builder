@@ -258,8 +258,9 @@ export default class CanvasStore {
     }
 
     if (diff.name) {
+      const oldName = L.name
       L.name = diff.name
-      this.changelog.newMutateLoc(L, 'name', L.name, diff.name)
+      this.changelog.newMutateLoc(L, 'name', oldName, diff.name)
     }
     if (diff.shape) {
       const oldShape = L.shape

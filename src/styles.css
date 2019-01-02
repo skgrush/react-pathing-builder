@@ -35,3 +35,7 @@ div.pathing-builder > canvas.pathing-builder-canvas {
 div.pathing-builder > div.change-exporter {
   grid-column: 2;
 }
+
+div.pathing-builder > div.data-importer {
+  grid-column: 2;
+}

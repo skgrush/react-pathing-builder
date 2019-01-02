@@ -104,7 +104,11 @@ export function objectifyChanges(CS: ChangeStruct): ExportStruct {
 }
 
 function toModExp(C: _MutateChange): ModExport {
-  const {property, oldValue, newValue} = C
+  let {property, oldValue, newValue} = C
+  if (property === 'shape') {
+    if (oldValue instanceof Shape) oldValue = oldValue.constructor.name
+    if (newValue instanceof Shape) newValue = newValue.constructor.name
+  }
   return {
     type: 'mod',
     target: C.target.key,
