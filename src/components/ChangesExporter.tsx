@@ -3,11 +3,12 @@ import {ChangeInstance} from '../interfaces'
 import ChangeStore from '../state/changes/ChangeStore'
 
 interface Props {
-  changelog: ChangeStore
+  lastChange: ChangeStore['lastChange']
+  exportData: ChangeStore['exportChanges']
+  space?: number
 }
 
 interface State {
-  lastChange: ChangeInstance | null
   dataString: string
 }
 
@@ -16,21 +17,19 @@ export default class ChangesExporter extends React.Component<Props, State> {
     super(props)
 
     this.state = {
-      lastChange: this.props.changelog.lastChange,
       dataString: this.getData(),
     }
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (this.props.changelog.lastChange !== this.state.lastChange)
+    if (this.props.lastChange !== prevProps.lastChange)
       this.setState({
-        lastChange: this.props.changelog.lastChange,
         dataString: this.getData(),
       })
   }
 
   private getData() {
-    return JSON.stringify(this.props.changelog.exportData(), null, 2)
+    return JSON.stringify(this.props.exportData(), null, this.props.space || 2)
   }
 
   render() {
@@ -41,7 +40,7 @@ export default class ChangesExporter extends React.Component<Props, State> {
           JSON export of additions, removals, and modifications to the Imported
           Data.
         </details>
-        <textarea readOnly value={this.state.dataString} />
+        <textarea readOnly value={this.state.dataString} rows={6} />
       </div>
     )
   }

@@ -6,6 +6,7 @@ import CanvasStore from './state/CanvasStore'
 import {loadMapSrc, fitBoxInBox} from './utils'
 
 import './styles.css'
+import DataImporter from './components/DataImporter'
 
 interface Props {
   mapSrc: HTMLImageElement | string | null
@@ -24,8 +25,6 @@ interface LoadedState {
   height: number
   className: string
   canvasClassName: string
-  stateButtonBox: React.ComponentClass<StateButtonBoxProps>
-  propertiesPanel: React.ComponentClass<PropertiesPanelProps>
 }
 interface NotLoadedState {
   store: null
@@ -34,8 +33,6 @@ interface NotLoadedState {
   height: null
   className: string
   canvasClassName: string
-  stateButtonBox: React.ComponentClass<StateButtonBoxProps>
-  propertiesPanel: React.ComponentClass<PropertiesPanelProps>
 }
 
 type State = LoadedState | NotLoadedState
@@ -50,6 +47,14 @@ const FakeChangelog = Object.freeze({
 class PathingBuilder extends React.Component<Props, State> {
   canvas: React.RefObject<HTMLCanvasElement>
 
+  get StateButtonBox() {
+    return this.props.stateButtonBoxComponent || StateButtonBox
+  }
+
+  get PropertiesPanel() {
+    return this.props.propertiesPanelComponent || PropertiesPanel
+  }
+
   constructor(props: Props) {
     super(props)
 
@@ -61,8 +66,6 @@ class PathingBuilder extends React.Component<Props, State> {
       height: null,
       className: classNames.join(' '),
       canvasClassName: PathingBuilder._makeCanvasClassNames(classNames),
-      stateButtonBox: props.stateButtonBoxComponent || StateButtonBox,
-      propertiesPanel: props.propertiesPanelComponent || PropertiesPanel,
     }
     this.canvas = React.createRef()
   }
@@ -79,15 +82,8 @@ class PathingBuilder extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    const {stateButtonBoxComponent, propertiesPanelComponent} = this.props
-    if (
-      prevProps.className !== this.props.className ||
-      prevProps.stateButtonBoxComponent !== stateButtonBoxComponent ||
-      prevProps.propertiesPanelComponent !== propertiesPanelComponent
-    )
+    if (prevProps.className !== this.props.className)
       this.setState({
-        stateButtonBox: stateButtonBoxComponent || StateButtonBox,
-        propertiesPanel: propertiesPanelComponent || PropertiesPanel,
         ...PathingBuilder._updateClassNames(this.props.className),
       })
 
@@ -181,31 +177,50 @@ class PathingBuilder extends React.Component<Props, State> {
     return (this.state.store && this.state.store.changelog) || FakeChangelog
   }
 
+  get ChangesExporter() {
+    return ChangesExporter
+  }
+
+  get DataImporter() {
+    return DataImporter
+  }
+
   render() {
-    const {mapImg} = this.state
+    const {mapImg, className, store} = this.state
+
     if (!mapImg) {
       return (
-        <div className="pathing-builder">
+        <div {...this.passProps} className={className}>
           <span className="pb-message">Unable to load source image</span>
         </div>
       )
     }
 
+    // if (!store) {
+    //   return (
+    //     <div {...this.passProps} className={className}>
+    //       <span className="pb-message">CanvasStore not loaded</span>
+    //     </div>
+    //   )
+    // }
+
     return (
-      <div {...this.passProps} className={this.state.className}>
-        <this.state.stateButtonBox
-          onClickUndo={this.changelog.undo}
-          onClickRedo={this.changelog.redo}
-          undoCount={this.changelog.undoSize}
-          redoCount={this.changelog.redoSize}
-        />
-        {this.state.store && (
-          <this.state.propertiesPanel
-            selected={this.state.store.selection}
-            modifyLocation={this.state.store.modLoc}
-            modifyEdge={this.state.store.modEdge}
-            deleteLocation={this.state.store.removeLoc}
-            deleteEdge={this.state.store.removeEdge}
+      <div {...this.passProps} className={className}>
+        {store && (
+          <this.StateButtonBox
+            onClickUndo={store.changelog.undo}
+            onClickRedo={store.changelog.redo}
+            undoCount={store.changelog.undoSize}
+            redoCount={store.changelog.redoSize}
+          />
+        )}
+        {store && (
+          <this.PropertiesPanel
+            selected={store.selection}
+            modifyLocation={store.modLoc}
+            modifyEdge={store.modEdge}
+            deleteLocation={store.removeLoc}
+            deleteEdge={store.removeEdge}
           />
         )}
 
@@ -215,9 +230,17 @@ class PathingBuilder extends React.Component<Props, State> {
           width={mapImg.width || undefined}
           height={mapImg.height || undefined}
         />
-
-        {this.state.store && (
-          <ChangesExporter changelog={this.state.store.changelog} />
+        {store && (
+          <this.ChangesExporter
+            lastChange={store.changelog.lastChange}
+            exportData={store.changelog.exportChanges}
+          />
+        )}
+        {store && (
+          <this.DataImporter
+            lastChange={store.changelog.lastChange}
+            importData={store.loadData}
+          />
         )}
       </div>
     )
