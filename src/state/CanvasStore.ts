@@ -145,18 +145,20 @@ export default class CanvasStore {
    * Returns a 2-tuple, the numerator/denominator of the fraction of successful
    * loads of Locations and Edges.
    */
-  loadData = (data: ExportSimple | any[]): [number, number] => {
-    this.clear()
+  loadData = (
+    data: ExportSimple | any[],
+    updateReact = true
+  ): [number, number] => {
+    this.clear(false)
     if (!data) return [0, 0]
     if (!Array.isArray(data)) {
       // data's not an array, but it is truthy
       if (data.hasOwnProperty('locations') && data.hasOwnProperty('edges')) {
         // data's probably an ExportSimple
-        return this.importData(data)
-      } else {
-        // I don't know what data is. Just try importing it as a Location
-        return [+this._loadLoc(data), 1]
+        return this.importData(data, updateReact)
       }
+      // I don't know what data is. Just convert it to an array.
+      data = [data]
     }
 
     // data is definitely an array. Pull out the Edges, load the Locations
@@ -181,29 +183,35 @@ export default class CanvasStore {
       `loadData() loaded ${successCount} of ${totalCount} Locations and Edges.`
     )
 
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
     return [successCount, totalCount]
   }
 
   /**
    * Import data from a more strict ExportSimple object like from exportData()
    */
-  importData = ({locations, edges}: ExportSimple): [number, number] => {
+  importData = (ES: ExportSimple, updateReact = true): [number, number] => {
     let successCount = 0,
       totalCount = 0
 
-    if (Array.isArray(locations)) {
-      for (const loc of locations) {
+    if (Array.isArray(ES.locations)) {
+      for (const loc of ES.locations) {
         successCount += +this._loadLoc(loc)
         totalCount += 1
       }
     }
-    if (Array.isArray(edges)) {
-      for (const edge of edges) {
+    if (Array.isArray(ES.edges)) {
+      for (const edge of ES.edges) {
         successCount += +this._loadEdge(edge)
         totalCount += 1
       }
     }
 
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
     return [successCount, totalCount]
   }
 
@@ -672,7 +680,7 @@ export default class CanvasStore {
     if (!this.addLoc(loc)) return null
 
     if (select) {
-      this.select(key)
+      this.select(key, false)
     }
 
     return loc
@@ -687,7 +695,6 @@ export default class CanvasStore {
     let selectedLoc =
       this.getFirstLocationAt(point) || this.getFirstEdgeAt(point)
 
-    console.debug('prevSelected:', prevSelected, 'selected:', selectedLoc)
     const isAddMod = e[this.addMod]
 
     if (selectedLoc instanceof Location) {
@@ -715,7 +722,6 @@ export default class CanvasStore {
       }
     } else if (selectedLoc instanceof Edge) {
       // selected an edge; that's not really an option yet though
-      console.debug('AN EDGE', selectedLoc)
       this.select(selectedLoc.key)
     } else if (prevSelected instanceof Location && !selectedLoc && isAddMod) {
       // Add-Modifier is held and prevSelected, create a Location and Edge

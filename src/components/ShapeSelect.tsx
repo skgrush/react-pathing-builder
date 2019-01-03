@@ -85,10 +85,8 @@ export class ShapeSelect extends React.Component<Props, State> {
       (this.selectRef.current && this.selectRef.current.value) ||
       e.currentTarget.value
 
-    console.debug('ShapeSelect.oC:', value, e)
     this.setState({value: value}, () => {
       if (this.props.onChange) this.props.onChange(value)
-      console.debug('sS oC cb bb')
     })
   }
 
