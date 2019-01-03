@@ -1,17 +1,12 @@
 import * as React from 'react'
-
-export interface BaseProps {
-  lastChange: object | null
-  exportData: () => object
-  space?: number
-}
+import {BaseExporterProps} from '../../interfaces'
 
 export interface BaseState {
   dataString: string
 }
 
 export abstract class BaseJsonExporter<
-  Props extends BaseProps = BaseProps,
+  Props extends BaseExporterProps = BaseExporterProps,
   State extends BaseState = BaseState
 > extends React.Component<Props, State> {
   /** overloadable State default */

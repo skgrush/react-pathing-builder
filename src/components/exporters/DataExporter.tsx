@@ -1,11 +1,6 @@
 import * as React from 'react'
-import ChangeStore from '../../state/changes/ChangeStore'
-import CanvasStore from '../../state/CanvasStore'
-import {BaseJsonExporter, BaseProps} from './BaseJsonExporter'
-
-interface Props extends BaseProps {
-  exportData: CanvasStore['exportData']
-}
+import {BaseJsonExporter} from './BaseJsonExporter'
+import {DataExporterProps as Props} from '../../interfaces'
 
 export class DataExporter extends BaseJsonExporter<Props> {
   get className() {

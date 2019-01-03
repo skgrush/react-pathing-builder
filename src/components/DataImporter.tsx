@@ -1,12 +1,5 @@
 import * as React from 'react'
-import ChangeStore from '../state/changes/ChangeStore'
-import CanvasStore from '../state/CanvasStore'
-
-interface Props {
-  lastChange: ChangeStore['lastChange']
-  importData: CanvasStore['loadData']
-  space?: number
-}
+import {DataImporterProps as Props} from '../interfaces'
 
 interface State {
   message: string

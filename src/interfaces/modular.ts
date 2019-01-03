@@ -4,6 +4,35 @@ import {StylableParams, LabelStyleParams} from './geometry'
 import Location, {LocationLike, LocationMutableProps} from '../state/Location'
 import Edge, {EdgeMutable} from '../state/Edge'
 import {Shape, ShapeParams, ShapeSubclass} from '../drawables'
+import ChangeStore from '../state/changes/ChangeStore'
+import CanvasStore from '../state/CanvasStore'
+
+export type ModularComponentProp =
+  | DataImporterProps
+  | DataExporterProps
+  | ChangesExporterProps
+  | StateButtonBoxProps
+  | PropertiesPanelProps
+
+export interface DataImporterProps {
+  lastChange: ChangeStore['lastChange']
+  importData: CanvasStore['loadData']
+  space?: number
+}
+
+export interface BaseExporterProps {
+  lastChange: object | null
+  exportData: () => object
+  space?: number
+}
+
+export interface DataExporterProps extends BaseExporterProps {
+  exportData: CanvasStore['exportData']
+}
+
+export interface ChangesExporterProps extends BaseExporterProps {
+  exportData: ChangeStore['exportChanges']
+}
 
 export interface PropertiesPanelProps {
   selected: Readonly<Location | Edge | null>

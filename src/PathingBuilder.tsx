@@ -1,21 +1,40 @@
 import * as React from 'react'
 
-import {Pointed, StateButtonBoxProps, PropertiesPanelProps} from './interfaces'
-import {StateButtonBox, PropertiesPanel, ChangesExporter} from './components'
+import {
+  Pointed,
+  StateButtonBoxProps,
+  PropertiesPanelProps,
+  DataImporterProps,
+  ChangesExporterProps,
+  DataExporterProps,
+  ModularComponentProp,
+} from './interfaces'
+import {
+  StateButtonBox,
+  PropertiesPanel,
+  ChangesExporter,
+  DataExporter,
+} from './components'
 import CanvasStore from './state/CanvasStore'
 import {loadMapSrc, fitBoxInBox} from './utils'
 
 import './styles.css'
 import DataImporter from './components/DataImporter'
 
-interface Props {
+interface ModularProps {
+  stateButtonBoxComponent?: React.ComponentClass<StateButtonBoxProps> | null
+  propertiesPanelComponent?: React.ComponentClass<PropertiesPanelProps> | null
+  dataImporterComponent?: React.ComponentClass<DataImporterProps> | null
+  changesExporterComponent?: React.ComponentClass<ChangesExporterProps> | null
+  dataExporterComponent?: React.ComponentClass<DataExporterProps> | null
+}
+
+interface Props extends ModularProps {
   mapSrc: HTMLImageElement | string | null
   boundingWidth?: number
   boundingHeight?: number
   pixelOffset?: Pointed
   className?: string
-  stateButtonBoxComponent?: React.ComponentClass<StateButtonBoxProps>
-  propertiesPanelComponent?: React.ComponentClass<PropertiesPanelProps>
 }
 
 interface LoadedState {
@@ -48,11 +67,19 @@ class PathingBuilder extends React.Component<Props, State> {
   canvas: React.RefObject<HTMLCanvasElement>
 
   get StateButtonBox() {
-    return this.props.stateButtonBoxComponent || StateButtonBox
+    return this.getter('stateButtonBoxComponent', StateButtonBox)
   }
-
   get PropertiesPanel() {
-    return this.props.propertiesPanelComponent || PropertiesPanel
+    return this.getter('propertiesPanelComponent', PropertiesPanel)
+  }
+  get ChangesExporter() {
+    return this.getter('changesExporterComponent', ChangesExporter)
+  }
+  get DataImporter() {
+    return this.getter('dataImporterComponent', DataImporter)
+  }
+  get DataExporter() {
+    return this.getter('dataExporterComponent', DataExporter)
   }
 
   constructor(props: Props) {
@@ -173,16 +200,31 @@ class PathingBuilder extends React.Component<Props, State> {
     }
   }
 
-  get changelog() {
-    return (this.state.store && this.state.store.changelog) || FakeChangelog
-  }
-
-  get ChangesExporter() {
-    return ChangesExporter
-  }
-
-  get DataImporter() {
-    return DataImporter
+  /**
+   * Helper for properties that retrieve Components
+   */
+  private getter = <
+    K extends keyof ModularProps,
+    P extends ModularComponentProp,
+    C extends React.ComponentClass<P>
+    //Exclude<ModularProps[K], null | undefined>
+  >(
+    propName: K,
+    default_: React.ComponentClass<P>
+  ): C | React.ComponentClass<P> | null => {
+    if (propName === 'children') return null
+    const propValue = this.props[propName]
+    if (propValue === undefined) {
+      return default_
+    }
+    if (!this.state.store || propValue === null) {
+      return null
+    }
+    if (propValue && typeof propValue === 'function') {
+      return (propValue as unknown) as React.ComponentClass<P>
+    }
+    console.error('prop:', propName, 'propValue:', propValue)
+    throw new Error('Bad PathingBuilder getter arguments')
   }
 
   render() {
@@ -204,18 +246,20 @@ class PathingBuilder extends React.Component<Props, State> {
     //   )
     // }
 
+    const {StateButtonBox, PropertiesPanel, DataImporter, DataExporter} = this
+
     return (
       <div {...this.passProps} className={className}>
-        {store && (
-          <this.StateButtonBox
+        {store && StateButtonBox && (
+          <StateButtonBox
             onClickUndo={store.changelog.undo}
             onClickRedo={store.changelog.redo}
             undoCount={store.changelog.undoSize}
             redoCount={store.changelog.redoSize}
           />
         )}
-        {store && (
-          <this.PropertiesPanel
+        {store && PropertiesPanel && (
+          <PropertiesPanel
             selected={store.selection}
             modifyLocation={store.modLoc}
             modifyEdge={store.modEdge}
@@ -230,16 +274,23 @@ class PathingBuilder extends React.Component<Props, State> {
           width={mapImg.width || undefined}
           height={mapImg.height || undefined}
         />
-        {store && (
-          <this.ChangesExporter
+
+        {store && DataImporter && (
+          <DataImporter
+            lastChange={store.changelog.lastChange}
+            importData={store.loadData}
+          />
+        )}
+        {store && ChangesExporter && (
+          <ChangesExporter
             lastChange={store.changelog.lastChange}
             exportData={store.changelog.exportChanges}
           />
         )}
-        {store && (
-          <this.DataImporter
+        {store && DataExporter && (
+          <DataExporter
             lastChange={store.changelog.lastChange}
-            importData={store.loadData}
+            exportData={store.exportData}
           />
         )}
       </div>

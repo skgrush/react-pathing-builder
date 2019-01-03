@@ -1,11 +1,8 @@
 import * as React from 'react'
 
 import ChangeStore from '../../state/changes/ChangeStore'
-import {BaseJsonExporter, BaseProps} from './BaseJsonExporter'
-
-interface Props extends BaseProps {
-  exportData: ChangeStore['exportChanges']
-}
+import {BaseJsonExporter} from './BaseJsonExporter'
+import {ChangesExporterProps as Props} from '../../interfaces'
 
 export class ChangesExporter extends BaseJsonExporter<Props> {
   get className() {
