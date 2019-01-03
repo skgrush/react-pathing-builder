@@ -1,5 +1,4 @@
-import {default as PathingBuilder} from './components/PathingBuilder'
-export {PathingBuilder}
+import {PathingBuilder} from './components/PathingBuilder'
 
 export * from './components'
 export * from './interfaces'
