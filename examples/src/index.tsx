@@ -3,6 +3,8 @@ import * as ReactDOM from 'react-dom'
 
 import PathingBuilder from '../../src'
 
+import './index.css'
+
 interface State {
   imgSrc: string | null
 }
@@ -36,7 +38,11 @@ class App extends React.Component<any, State> {
           value="Default Img"
         />
         {this.state.imgSrc && (
-          <PathingBuilder className="funybuilder" mapSrc={this.state.imgSrc} />
+          <PathingBuilder
+            className="funybuilder"
+            mapSrc={this.state.imgSrc}
+            pixelOffset={{x: 20, y: 50}}
+          />
         )}
       </main>
     )

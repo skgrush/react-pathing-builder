@@ -1,41 +1,62 @@
 div.pathing-builder {
-  background: gray;
-
   display: grid;
-  grid-template-columns: 200px auto;
+  grid-template-columns: 200px auto auto auto;
 }
 
-div.pathing-builder > p {
+.pathing-builder > p {
   color: teal;
 }
 
-div.pathing-builder > div.pathing-builder-statebtnbox {
+.pathing-builder .pathing-builder-statebtnbox {
   grid-column: 2;
 }
 
-div.pathing-builder > div.pathing-builder-propertiespanel {
+.pathing-builder .pathing-builder-propertiespanel {
   grid-column: 1;
 }
-div.pathing-builder > div.pathing-builder-propertiespanel > section > form > * {
+.pathing-builder .pathing-builder-propertiespanel > section > form > * {
   border: 1px solid;
   border-radius: 15px;
 }
 
-div.pathing-builder > div.pathing-builder-propertiespanel dd.json {
+.pathing-builder .pathing-builder-propertiespanel .json {
   overflow-wrap: break-word;
 }
 
 div.pathing-builder > canvas.pathing-builder-canvas {
+  /**
+   * Important specific defaults, values affect click accuracy!!
+   * If you override these values,
+   **/
   padding: 0;
   border-width: 0;
+}
 
+.pathing-builder .pathing-builder-canvas {
+  grid-column: 2 / span n;
+}
+
+.pathing-builder .change-exporter,
+.pathing-builder .data-importer,
+.pathing-builder .data-exporter {
+  width: fit-content;
+  grid-row: 3;
+}
+
+.pathing-builder .data-importer > textarea,
+.pathing-builder .change-exporter > textarea,
+.pathing-builder .data-exporter > textarea {
+  display: block;
+}
+
+.pathing-builder .change-exporter {
+  grid-column: 3;
+}
+
+.pathing-builder .data-importer {
   grid-column: 2;
 }
 
-div.pathing-builder > div.change-exporter {
-  grid-column: 2;
-}
-
-div.pathing-builder > div.data-importer {
-  grid-column: 2;
+.pathing-builder .data-exporter {
+  grid-column: 4;
 }
