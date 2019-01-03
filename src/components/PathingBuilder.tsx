@@ -233,8 +233,10 @@ class PathingBuilder extends React.Component<Props, State> {
           <StateButtonBox
             onClickUndo={store.changelog.undo}
             onClickRedo={store.changelog.redo}
+            onClickClear={() => store.clear()}
             undoCount={store.changelog.undoSize}
             redoCount={store.changelog.redoSize}
+            isEmpty={store.isEmpty}
           />
         )}
         {store && PropertiesPanel && (

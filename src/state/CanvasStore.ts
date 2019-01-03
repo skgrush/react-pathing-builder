@@ -94,6 +94,11 @@ export default class CanvasStore {
   /** map currently-added Edge-keys to Edges. */
   private readonly edgeMap: Map<string, Edge> = new Map()
 
+  get isEmpty() {
+    const {locationMap, edgeMap} = this
+    return locationMap.size === 0 && edgeMap.size === 0
+  }
+
   get selectedKey() {
     return this._selectedKey
   }
@@ -216,13 +221,17 @@ export default class CanvasStore {
   /**
    * Wipe all data loaded into the stores and clear the canvas.
    */
-  clear = () => {
+  clear = (updateReact = true) => {
     this.locationMap.clear()
     this.edgeMap.clear()
 
     this.changelog.clear()
 
+    this.select(null, false)
     this.clearCanvas()
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
   }
 
   /**
