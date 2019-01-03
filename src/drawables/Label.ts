@@ -9,6 +9,9 @@ export interface LabelParams extends DrawableParams {
   ['text']: string
 }
 
+const FALLBACK_WIDTH = 10
+const FALLBACK_HEIGHT = 10
+
 export default class Label<
   P extends LabelParams = LabelParams
 > extends Drawable {
@@ -73,8 +76,8 @@ export default class Label<
     const OLD_FONT = ctx.font
     if (this.font) ctx.font = this.font
     const {width, emHeightAscent, emHeightDescent} = ctx.measureText(this.text)
-    this._width = width
-    this._height = emHeightAscent + emHeightDescent
+    this._width = width || FALLBACK_WIDTH
+    this._height = emHeightAscent + emHeightDescent || FALLBACK_HEIGHT
     if (this.font) ctx.font = OLD_FONT
   }
 }
