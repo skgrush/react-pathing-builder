@@ -36,6 +36,7 @@ export default class DataImporter extends React.Component<Props, State> {
         null,
         this.props.space || 2
       )
+      this.setState({message: 'Formatted'})
     } catch (e) {
       this.errorHandler(e)
       return
