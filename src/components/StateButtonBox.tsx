@@ -2,9 +2,7 @@ import * as React from 'react'
 
 import {StateButtonBoxProps} from '../interfaces'
 
-export default class StateButtonBox extends React.Component<
-  StateButtonBoxProps
-> {
+export class StateButtonBox extends React.Component<StateButtonBoxProps> {
   constructor(props: StateButtonBoxProps) {
     super(props)
   }

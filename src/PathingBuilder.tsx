@@ -14,12 +14,12 @@ import {
   PropertiesPanel,
   ChangesExporter,
   DataExporter,
+  DataImporter,
 } from './components'
 import CanvasStore from './state/CanvasStore'
 import {loadMapSrc, fitBoxInBox} from './utils'
 
 import './styles.css'
-import DataImporter from './components/DataImporter'
 
 interface ModularProps {
   stateButtonBoxComponent?: React.ComponentClass<StateButtonBoxProps> | null

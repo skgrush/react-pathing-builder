@@ -27,7 +27,7 @@ function propsToValue(props: Props) {
   return props.value || props.defaultValue || ''
 }
 
-export default class ShapeSelect extends React.Component<Props, State> {
+export class ShapeSelect extends React.Component<Props, State> {
   selectRef: React.RefObject<HTMLSelectElement>
 
   get value() {

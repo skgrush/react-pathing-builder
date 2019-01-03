@@ -11,7 +11,7 @@ interface State {
   didClick: boolean
 }
 
-export default class Confirmer extends React.Component<Props, State> {
+export class Confirmer extends React.Component<Props, State> {
   state: State = {didClick: false}
 
   onConfirm = (e: React.MouseEvent<HTMLInputElement>) => {

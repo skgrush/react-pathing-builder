@@ -2,7 +2,7 @@ import * as React from 'react'
 
 import Location from '../../state/Location'
 import Edge from '../../state/Edge'
-import LocationForm from './LocationForm'
+import {LocationForm} from './LocationForm'
 
 import {PropertiesPanelProps} from '../../interfaces'
 
@@ -18,7 +18,7 @@ function whichClassName(w?: Readonly<Location | Edge> | null) {
   return ''
 }
 
-export default class PropertiesPanel extends React.Component<
+export class PropertiesPanel extends React.Component<
   PropertiesPanelProps,
   PropertiesPanelState
 > {

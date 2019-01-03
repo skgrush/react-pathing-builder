@@ -5,9 +5,9 @@ import Location, {
   LocationLike,
   LocationMutableProps,
 } from '../../state/Location'
-import LocationProperties from './LocationProperties'
-import ShapeSelect from '../ShapeSelect'
-import Confirmer from '../Confirmer'
+import {LocationProperties} from './LocationProperties'
+import {ShapeSelect} from '../ShapeSelect'
+import {Confirmer} from '../Confirmer'
 
 interface Props {
   selected: Readonly<Location>
@@ -26,7 +26,7 @@ interface State {
   clickedDelete: boolean
 }
 
-export default class LocationForm extends React.Component<Props, State> {
+export class LocationForm extends React.Component<Props, State> {
   inputName: React.RefObject<HTMLInputElement>
   inputX: React.RefObject<HTMLInputElement>
   inputY: React.RefObject<HTMLInputElement>
