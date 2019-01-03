@@ -29,7 +29,7 @@ interface ModularProps {
   dataExporterComponent?: React.ComponentClass<DataExporterProps> | null
 }
 
-interface Props extends ModularProps {
+export interface Props extends ModularProps {
   mapSrc: HTMLImageElement | string | null
   boundingWidth?: number
   boundingHeight?: number
@@ -201,7 +201,12 @@ class PathingBuilder extends React.Component<Props, State> {
   }
 
   /**
-   * Helper for properties that retrieve Components
+   * Helper for properties that retrieve ComponentClasses from this.props.
+   * If the prop is null, return null (disable Component).
+   * If the prop is undefined, return the default ComponentClass.
+   *
+   * @param {string} propName - React prop associated with a ComponentClass.
+   * @param {ComponentClass} default_ - default ComponentClass.
    */
   private getter = <
     K extends keyof ModularProps,
