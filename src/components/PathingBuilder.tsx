@@ -8,18 +8,18 @@ import {
   ChangesExporterProps,
   DataExporterProps,
   ModularComponentProp,
-} from './interfaces'
+} from '../interfaces'
 import {
   StateButtonBox,
   PropertiesPanel,
   ChangesExporter,
   DataExporter,
   DataImporter,
-} from './components'
-import CanvasStore from './state/CanvasStore'
-import {loadMapSrc, fitBoxInBox} from './utils'
+} from '../components'
+import CanvasStore from '../state/CanvasStore'
+import {loadMapSrc, fitBoxInBox} from '../utils'
 
-import './styles.css'
+import '../styles.css'
 
 interface ModularProps {
   stateButtonBoxComponent?: React.ComponentClass<StateButtonBoxProps> | null
@@ -55,13 +55,6 @@ interface NotLoadedState {
 }
 
 type State = LoadedState | NotLoadedState
-
-const FakeChangelog = Object.freeze({
-  undo: () => false,
-  redo: () => false,
-  undoSize: 0,
-  redoSize: 0,
-})
 
 class PathingBuilder extends React.Component<Props, State> {
   canvas: React.RefObject<HTMLCanvasElement>
