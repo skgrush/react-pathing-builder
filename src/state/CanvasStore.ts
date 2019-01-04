@@ -15,17 +15,20 @@ import {
   EdgeExport,
   ExportSimple,
 } from '../interfaces'
-import {diffPointed, b64time, addPointed} from '../utils'
+import {
+  diffPointed,
+  b64time,
+  addPointed,
+  ClickModifier,
+  CLICK_MODIFIERS,
+  modifiers,
+  getPlatform,
+  isUndo,
+  isRedo,
+  MODIFIER_KEYS,
+} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
-
-export type ClickModifier = 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'
-const CLICK_MODIFIERS = Object.freeze([
-  'altKey',
-  'ctrlKey',
-  'metaKey',
-  'shiftKey',
-] as ClickModifier[])
 
 const DEFAULT_RADIUS = 10
 
@@ -506,6 +509,7 @@ export default class CanvasStore {
     // add all our event listeners
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
     this.canvas.addEventListener('dblclick', this.dblClickHandler, true)
+    this.canvas.addEventListener('keydown', this.keyDownHandler, true)
     // re/set the drawing interval
     if (this.intervalID) clearInterval(this.intervalID)
     this.intervalID = setInterval(this.draw, this.refreshInterval)
@@ -777,6 +781,36 @@ export default class CanvasStore {
       diffPointed(point, this.dragoff, this.selection)
       this.valid = false
     }
+  }
+
+  keyDownHandler = (e: KeyboardEvent) => {
+    if (MODIFIER_KEYS.indexOf(e.key) >= 0) return
+
+    e.preventDefault()
+    const platform = getPlatform()
+    switch (e.key) {
+      case 'Backspace': // with no modifiers
+        const {selection} = this
+        if (selection && modifiers(e) === 0) {
+          if (selection instanceof Location) this.removeLoc(selection)
+          else if (selection instanceof Edge) this.removeEdge(selection)
+          return
+        }
+        break
+      case 'Undo':
+      case 'z':
+        if (isUndo(e, platform)) {
+          return this.changelog.undo()
+        }
+      // 'z' can be used for redo, so check it too next
+      case 'Redo':
+      case 'y':
+        if (isRedo(e, platform)) {
+          return this.changelog.redo()
+        }
+        break
+    }
+    console.debug('unexpected keyDown:', e.key, e.code, e.char, e)
   }
 
   /**
