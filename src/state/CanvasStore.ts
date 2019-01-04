@@ -505,7 +505,6 @@ export default class CanvasStore {
     }
     // add all our event listeners
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
-    this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
     this.canvas.addEventListener('dblclick', this.dblClickHandler, true)
     // re/set the drawing interval
     if (this.intervalID) clearInterval(this.intervalID)
@@ -635,7 +634,11 @@ export default class CanvasStore {
   }
 
   dblClickHandler = (e: MouseEvent) => {
-    this.createLocAtMouse(this._findMouse(e))
+    e.preventDefault()
+    const R = this.createLocAtMouse(this._findMouse(e))
+    if (R && this.updateReact) {
+      this.updateReact()
+    }
     this.valid = false
   }
 
@@ -690,6 +693,22 @@ export default class CanvasStore {
    * Handles clicking on the canvas, including de/selecting locations/edges.
    */
   mouseDownHandler = (e: MouseEvent) => {
+    if (e.buttons === 1 || (!e.buttons && e.button === 0)) {
+      console.debug('mDH: button is primary', e)
+    } else if (typeof e.button !== 'number' && typeof e.buttons !== 'number') {
+      console.debug('mDH: no `button/s` property.', e)
+    } else if (e.button !== 0 && e.buttons !== 1) {
+      console.debug('mDH: non-primary button, returning.', e)
+      return
+    } else if (e.buttons !== 1) {
+      console.debug('mDH: `buttons` =', e.buttons)
+    } else {
+      console.debug('mDH: e.button === e.buttons === 1', e)
+    }
+    e.preventDefault()
+
+    if (document.activeElement !== this.canvas) this.canvas.focus()
+
     const prevSelected = this.selection
     const point = this._findMouse(e)
     let selectedLoc =
@@ -716,6 +735,7 @@ export default class CanvasStore {
         }
       } else {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
+        this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
         const {x, y} = selectedLoc
         this.select(selectedLoc.key, false, diffPointed(point, {x, y}))
         this.changelog.newGrab(selectedLoc, {x, y})
@@ -742,6 +762,7 @@ export default class CanvasStore {
     }
     this.dragoff = null
     this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
+    this.canvas.removeEventListener('mouseup', this.mouseUpHandler, true)
   }
 
   mouseMoveHandler = (e: MouseEvent) => {

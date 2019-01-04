@@ -33,6 +33,7 @@ export class PBCanvas extends React.Component<Props, State> {
         className={this.state.className}
         width={this.props.width}
         height={this.props.height}
+        tabIndex={0}
       />
     )
   }

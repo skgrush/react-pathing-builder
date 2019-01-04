@@ -153,7 +153,6 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
     if (!opts) {
       opts = CanvasStore.defaultShapeProperties()
     }
-    console.info('updateShape:', shapeClass, opts)
 
     if (!shapeClass || this.shape instanceof shapeClass) {
       // default shape setter
