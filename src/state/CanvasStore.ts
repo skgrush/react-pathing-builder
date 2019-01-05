@@ -26,6 +26,7 @@ import {
   isUndo,
   isRedo,
   MODIFIER_KEYS,
+  handleArrowKey,
 } from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
@@ -788,25 +789,38 @@ export default class CanvasStore {
 
     e.preventDefault()
     const platform = getPlatform()
+    const {selection} = this
+
     switch (e.key) {
       case 'Backspace': // with no modifiers
-        const {selection} = this
         if (selection && modifiers(e) === 0) {
           if (selection instanceof Location) this.removeLoc(selection)
           else if (selection instanceof Edge) this.removeEdge(selection)
           return
         }
         break
+
       case 'Undo':
       case 'z':
         if (isUndo(e, platform)) {
           return this.changelog.undo()
         }
       // 'z' can be used for redo, so check it too next
+      // don't break
       case 'Redo':
       case 'y':
         if (isRedo(e, platform)) {
           return this.changelog.redo()
+        }
+        break
+
+      case 'ArrowDown':
+      case 'ArrowLeft':
+      case 'ArrowRight':
+      case 'ArrowUp':
+        if (selection instanceof Location) {
+          handleArrowKey(e, selection, this.modLoc)
+          return
         }
         break
     }

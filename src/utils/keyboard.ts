@@ -1,3 +1,7 @@
+import CanvasStore from '../state/CanvasStore'
+import Location from '../state/Location'
+import {addPointed} from './pointMath'
+
 const MODIFIER_KEYS = Object.freeze([
   'Alt',
   'AltGraph',
@@ -79,4 +83,26 @@ export function isRedo(e: KeyboardEvent, platform?: string | null) {
       return true
   }
   return false
+}
+
+export function handleArrowKey(
+  e: KeyboardEvent,
+  sel: Location,
+  modify: CanvasStore['modLoc']
+) {
+  const mods = modifiers(e)
+  const vector = {
+    x: e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0,
+    y: e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0,
+  }
+
+  if (mods === 0) {
+    // just one pixel
+  } else {
+    return
+  }
+
+  const dest = addPointed(sel, vector)
+
+  modify(sel, dest)
 }
