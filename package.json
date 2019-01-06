@@ -15,6 +15,7 @@
     "lib/**/*"
   ],
   "scripts": {
+    "start-bad": "yarn start --host 0.0.0.0 --disableHostCheck true",
     "start": "webpack-dev-server --mode development",
     "test": "jest --config jestconfig.json",
     "build": "yarn clean:build && yarn build:types && yarn build:js && yarn build:css",

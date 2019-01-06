@@ -822,6 +822,9 @@ export default class CanvasStore {
           return
         }
         break
+
+      case 'f':
+        throw 'Respects Paid'
     }
     console.debug('unexpected keyDown:', e.key, e.code, e.char, e)
   }

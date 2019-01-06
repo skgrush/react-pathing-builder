@@ -2,6 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import PathingBuilder from '../../src'
+import {ErrorBox} from '../../src/components'
 
 import './index.css'
 
@@ -44,6 +45,7 @@ class App extends React.Component<any, State> {
             pixelOffset={{x: 20, y: 50}}
           />
         )}
+        <ErrorBox />
       </main>
     )
   }
