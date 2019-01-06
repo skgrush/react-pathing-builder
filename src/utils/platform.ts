@@ -14,3 +14,6 @@ export function getPlatform(N: Navigatorish = window.navigator): Platform {
 
   return ''
 }
+
+const nativePlatform = getPlatform()
+export {nativePlatform}

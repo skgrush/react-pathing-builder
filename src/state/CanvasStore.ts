@@ -22,7 +22,6 @@ import {
   ClickModifier,
   CLICK_MODIFIERS,
   modifiers,
-  getPlatform,
   isUndo,
   isRedo,
   MODIFIER_KEYS,
@@ -360,8 +359,8 @@ export default class CanvasStore {
       const oldX = L.x,
         oldY = L.y
       let {x, y} = diff
-      if (!x) x = oldX
-      if (!y) y = oldY
+      if (x === undefined) x = oldX
+      if (y === undefined) y = oldY
       this.changelog.newGrab(L, L)
       L.moveTo({x, y})
       this.changelog.newDrop(L, {x, y})
@@ -788,11 +787,11 @@ export default class CanvasStore {
     if (MODIFIER_KEYS.indexOf(e.key) >= 0) return
 
     e.preventDefault()
-    const platform = getPlatform()
     const {selection} = this
 
     switch (e.key) {
       case 'Backspace': // with no modifiers
+      case 'Delete':
         if (selection && modifiers(e) === 0) {
           if (selection instanceof Location) this.removeLoc(selection)
           else if (selection instanceof Edge) this.removeEdge(selection)
@@ -802,14 +801,14 @@ export default class CanvasStore {
 
       case 'Undo':
       case 'z':
-        if (isUndo(e, platform)) {
+        if (isUndo(e)) {
           return this.changelog.undo()
         }
       // 'z' can be used for redo, so check it too next
       // don't break
       case 'Redo':
       case 'y':
-        if (isRedo(e, platform)) {
+        if (isRedo(e)) {
           return this.changelog.redo()
         }
         break
@@ -819,7 +818,7 @@ export default class CanvasStore {
       case 'ArrowRight':
       case 'ArrowUp':
         if (selection instanceof Location) {
-          handleArrowKey(e, selection, this.modLoc)
+          handleArrowKey(e, selection, this.modLoc, this.canvasDimensions)
           return
         }
         break
