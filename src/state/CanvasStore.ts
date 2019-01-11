@@ -523,6 +523,7 @@ export default class CanvasStore {
       this.resetTransform(ctx)
     }
     // add all our event listeners
+    this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
     this.canvas.addEventListener('dblclick', this.dblClickHandler, true)
     // re/set the drawing interval
@@ -780,7 +781,7 @@ export default class CanvasStore {
           this.select(selectedLoc.key)
         }
       } else {
-        this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
+        //this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
         const {x, y} = selectedLoc
         this.select(selectedLoc.key, false, diffPointed(point, {x, y}))
@@ -807,7 +808,7 @@ export default class CanvasStore {
       this.changelog.newDrop(selection, {x, y})
     }
     this.dragoff = null
-    this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
+    //this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
     this.canvas.removeEventListener('mouseup', this.mouseUpHandler, true)
   }
 
