@@ -37,6 +37,7 @@ const DEFAULT_RADIUS = 10
 interface Parameters {
   img?: HTMLImageElement | null
   canvas?: HTMLCanvasElement
+  scaleRatio?: number
   refreshInterval?: number
   pixelOffset?: Pointed
   weightScale?: number
@@ -56,6 +57,8 @@ export default class CanvasStore {
   private img: HTMLImageElement | null = null
   /** the actual canvas to draw on */
   private canvas: HTMLCanvasElement
+  /** factor to scale the canvas by */
+  private scaleRatio: number = 1
   /** milliseconds between redraw frame requests */
   private refreshInterval: number = Math.floor(1000 / 15)
   /** offset of the canvas, i.e. left/top padding + border */
@@ -250,7 +253,14 @@ export default class CanvasStore {
    */
   updateParams = (params: Parameters, first?: boolean) => {
     console.debug('updateParams', params)
-    const {img, pixelOffset, canvas, refreshInterval, selectionStroke} = params
+    const {
+      img,
+      pixelOffset,
+      canvas,
+      refreshInterval,
+      selectionStroke,
+      scaleRatio,
+    } = params
 
     if (img !== undefined) this.setImg(img)
 
@@ -269,9 +279,15 @@ export default class CanvasStore {
       this.pixelOffset = Object.assign(this.pixelOffset || {}, {x, y})
     }
 
-    if ((canvas && this.canvas !== canvas) || refreshInterval || first) {
+    if (
+      (canvas && this.canvas !== canvas) ||
+      refreshInterval ||
+      first ||
+      scaleRatio
+    ) {
       if (canvas) this.canvas = canvas
       if (refreshInterval) this.refreshInterval = refreshInterval
+      if (scaleRatio) this.scaleRatio = scaleRatio
       this.prepCanvas()
     }
 

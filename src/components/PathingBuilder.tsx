@@ -152,10 +152,14 @@ class PathingBuilder extends React.Component<Props, State> {
         pixelOffset: this.props.pixelOffset,
         img: this.state.mapImg,
         updateReact: this.updateReact,
+        scaleRatio: this.state.scaleRatio,
       })
       this.setState({store})
     } else {
-      store.updateParams({img: this.state.mapImg})
+      store.updateParams({
+        img: this.state.mapImg,
+        scaleRatio: this.state.scaleRatio,
+      })
     }
   }
 
