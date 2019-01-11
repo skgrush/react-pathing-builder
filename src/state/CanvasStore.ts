@@ -14,6 +14,7 @@ import {
   LocationExport,
   EdgeExport,
   ExportSimple,
+  DimensionBox,
 } from '../interfaces'
 import {diffPointed, b64time, addPointed, scalePointed} from '../utils'
 import {UniquenessError} from '../errors'
@@ -118,18 +119,14 @@ export default class CanvasStore {
     return this.weightScaleMult
   }
 
-  get canvasDimensions(): Pointed {
-    return this.img
-      ? scalePointed(
-          {
-            x: this.img.width,
-            y: this.img.height,
-          },
-          this.scaleRatio,
-          undefined,
-          true
-        )
-      : {x: 0, y: 0}
+  /**
+   * internal dimensions of the canvas in pixels.
+   */
+  get canvasDimensions(): DimensionBox {
+    return {
+      width: this.canvas.width / this.scaleRatio,
+      height: this.canvas.height / this.scaleRatio,
+    }
   }
 
   constructor(params: ConstructorParameters) {
@@ -536,7 +533,12 @@ export default class CanvasStore {
 
   private clearCanvas(ctx: CanvasRenderingContext2D | null = null) {
     if (!ctx) ctx = this.canvas.getContext('2d')
-    if (ctx) ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    if (ctx) {
+      const {width, height} = this.canvasDimensions
+      ctx.clearRect(0, 0, width, height)
+      return true
+    }
+    return false
   }
 
   private resetTransform(ctx: CanvasRenderingContext2D | null = null) {
