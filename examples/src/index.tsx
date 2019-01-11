@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 
 import PathingBuilder from '../../src'
-import {ErrorBox} from '../../src/components'
+import {ErrorBox} from './ErrorBox'
 
 import './index.css'
 

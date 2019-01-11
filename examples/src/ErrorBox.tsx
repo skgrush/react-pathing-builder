@@ -3,18 +3,20 @@ import * as React from 'react'
 interface Props {}
 
 interface State {
+  keys: Set<number>
   list: ReadonlyArray<React.ReactNode>
 }
 
-const keyset = new Set()
-
 export class ErrorBox extends React.Component<Props, State> {
-  state: State = {list: []}
+  state: State = {
+    list: [],
+    keys: new Set(),
+  }
 
   componentDidMount() {
     //document.addEventListener('error', this.onError)
     if (!window.onerror) window.onerror = this.onError
-    else this.insertNew(new Date(), '`window.onerror` already set')
+    else this.insertNew(Date.now(), '`window.onerror` already set')
 
     console.info('ErrorBox mounted', this)
   }
@@ -30,22 +32,25 @@ export class ErrorBox extends React.Component<Props, State> {
     colNo?: number,
     error?: Error | string
   ): void => {
-    const time = new Date()
+    let time = Date.now()
+    while (this.state.keys.has(time)) time += 0.1
+    this.state.keys.add(time)
 
-    if (typeof msg !== 'string') {
-      msg = String(msg)
-      try {
-        msg = JSON.stringify(msg, undefined, 2)
-      } catch (err) {
-        this.onError(
-          'Error while stringifying first arg `msg`',
-          'ErrorBox.tsx',
-          undefined,
-          undefined,
-          err
-        )
+    if (this.state)
+      if (typeof msg !== 'string') {
+        //msg = String(msg)
+        try {
+          msg = JSON.stringify(msg, undefined, 2)
+        } catch (err) {
+          this.onError(
+            'Error while stringifying previous error message',
+            'ErrorBox.tsx',
+            undefined,
+            undefined,
+            err
+          )
+        }
       }
-    }
 
     if (
       error instanceof Error &&
@@ -62,7 +67,7 @@ export class ErrorBox extends React.Component<Props, State> {
           error = JSON.stringify(error, undefined, 2)
         } catch (err) {
           this.onError(
-            'Error while stringifying fifth arg `error`',
+            'Error while stringifying previous error object',
             'ErrorBox.tsx',
             undefined,
             undefined,
@@ -72,7 +77,6 @@ export class ErrorBox extends React.Component<Props, State> {
         }
     }
 
-    const isoTime = time.toISOString()
     this.insertNew(
       time,
       <table key="1">
@@ -80,7 +84,7 @@ export class ErrorBox extends React.Component<Props, State> {
           <tr>
             <td>time</td>
             <td>
-              <time dateTime={time.toISOString()}>{time.getTime() / 1000}</time>
+              <time dateTime={new Date(time).toISOString()}>{time / 1000}</time>
             </td>
           </tr>
 
@@ -91,19 +95,19 @@ export class ErrorBox extends React.Component<Props, State> {
             </td>
           </tr>
 
-          <tr>
+          <tr hidden={!src}>
             <td>src</td>
             <td>
               <var>{String(src)}</var>
             </td>
           </tr>
 
-          <tr>
+          <tr hidden={lineNo === undefined}>
             <td>lineNo</td>
             <td>{String(lineNo)}</td>
           </tr>
 
-          <tr>
+          <tr hidden={colNo === undefined}>
             <td>colNo</td>
             <td>{String(colNo)}</td>
           </tr>
@@ -119,13 +123,9 @@ export class ErrorBox extends React.Component<Props, State> {
     )
   }
 
-  insertNew(time: Date, contents: React.ReactNode, args: {} = {}) {
-    let val = time.getTime()
-    if (keyset.has(val)) val += 0.1
-    console.info(val)
-    keyset.add(val)
+  insertNew(time: number, contents: React.ReactNode, args: {} = {}) {
     const newThing = (
-      <li value={val} className="error-li" key={val} {...args}>
+      <li value={time} className="error-li" key={time} {...args}>
         {contents}
       </li>
     )
