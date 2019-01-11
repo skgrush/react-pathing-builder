@@ -16,7 +16,7 @@ import {
   ExportSimple,
   DimensionBox,
 } from '../interfaces'
-import {diffPointed, b64time, addPointed, scalePointed} from '../utils'
+import {diffPointed, b64time, scalePointed, drawCornerText} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
 
@@ -604,6 +604,21 @@ export default class CanvasStore {
   }
 
   /**
+   * helper for drawing the mouse coords at the bottom of the screen.
+   * Expects to be called outside of the normal drawing cycle.
+   */
+  private _drawMouseCoords(coords: Pointed) {
+    const ctx = this.canvas.getContext('2d')
+    if (!ctx) return false
+    return drawCornerText(
+      `Mouse: (${coords.x}, ${coords.y})`,
+      ctx,
+      this.canvasDimensions,
+      this.scaleRatio
+    )
+  }
+
+  /**
    * Try to load an EdgeLike into the store WITHOUT adding to the changelog.
    * Returns `true` on success, returns `false` and prints an error to console
    * on failure.
@@ -805,8 +820,12 @@ export default class CanvasStore {
     if (this.valid && this.dragoff && this.selection instanceof Location) {
       const point = this._findMouse(e)
 
-      diffPointed(point, this.dragoff, this.selection)
+      // move the selection
+      this.selection.moveTo(diffPointed(point, this.dragoff))
+      this._drawMouseCoords(point)
       this.valid = false
+    } else {
+      this._drawMouseCoords(this._findMouse(e))
     }
   }
 
