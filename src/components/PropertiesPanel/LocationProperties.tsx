@@ -45,4 +45,4 @@ const LocationProperties: React.SFC<Props> = (props: Props) => {
   )
 }
 
-export default LocationProperties
+export {LocationProperties}

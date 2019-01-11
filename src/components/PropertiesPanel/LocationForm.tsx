@@ -5,9 +5,9 @@ import Location, {
   LocationLike,
   LocationMutableProps,
 } from '../../state/Location'
-import LocationProperties from './LocationProperties'
-import ShapeSelect from '../ShapeSelect'
-import Confirmer from '../Confirmer'
+import {LocationProperties} from './LocationProperties'
+import {ShapeSelect} from '../ShapeSelect'
+import {Confirmer} from '../Confirmer'
 
 interface Props {
   selected: Readonly<Location>
@@ -26,7 +26,7 @@ interface State {
   clickedDelete: boolean
 }
 
-export default class LocationForm extends React.Component<Props, State> {
+export class LocationForm extends React.Component<Props, State> {
   inputName: React.RefObject<HTMLInputElement>
   inputX: React.RefObject<HTMLInputElement>
   inputY: React.RefObject<HTMLInputElement>
@@ -69,8 +69,6 @@ export default class LocationForm extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    console.log('cDU:', prevProps, this.props, this.props.selected)
-    console.info(this.inputSelect)
     if (
       !this.inputName.current ||
       !this.inputX.current ||
@@ -90,14 +88,11 @@ export default class LocationForm extends React.Component<Props, State> {
       doUpdate = true
     }
     if (x !== this.state.initialX) {
-      console.info('Diff X')
       Object.assign(this.inputX.current, {
         defaultValue: x,
         value: x,
       })
       doUpdate = true
-    } else {
-      console.info('No Diff X', String(x), this.inputX.current.defaultValue)
     }
     if (y !== this.state.initialY) {
       Object.assign(this.inputY.current, {

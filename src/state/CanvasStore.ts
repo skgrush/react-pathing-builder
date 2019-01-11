@@ -94,6 +94,11 @@ export default class CanvasStore {
   /** map currently-added Edge-keys to Edges. */
   private readonly edgeMap: Map<string, Edge> = new Map()
 
+  get isEmpty() {
+    const {locationMap, edgeMap} = this
+    return locationMap.size === 0 && edgeMap.size === 0
+  }
+
   get selectedKey() {
     return this._selectedKey
   }
@@ -140,18 +145,20 @@ export default class CanvasStore {
    * Returns a 2-tuple, the numerator/denominator of the fraction of successful
    * loads of Locations and Edges.
    */
-  loadData = (data: ExportSimple | any[]): [number, number] => {
-    this.clear()
+  loadData = (
+    data: ExportSimple | any[],
+    updateReact = true
+  ): [number, number] => {
+    this.clear(false)
     if (!data) return [0, 0]
     if (!Array.isArray(data)) {
       // data's not an array, but it is truthy
       if (data.hasOwnProperty('locations') && data.hasOwnProperty('edges')) {
         // data's probably an ExportSimple
-        return this.importData(data)
-      } else {
-        // I don't know what data is. Just try importing it as a Location
-        return [+this._loadLoc(data), 1]
+        return this.importData(data, updateReact)
       }
+      // I don't know what data is. Just convert it to an array.
+      data = [data]
     }
 
     // data is definitely an array. Pull out the Edges, load the Locations
@@ -176,29 +183,35 @@ export default class CanvasStore {
       `loadData() loaded ${successCount} of ${totalCount} Locations and Edges.`
     )
 
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
     return [successCount, totalCount]
   }
 
   /**
    * Import data from a more strict ExportSimple object like from exportData()
    */
-  importData = ({locations, edges}: ExportSimple): [number, number] => {
+  importData = (ES: ExportSimple, updateReact = true): [number, number] => {
     let successCount = 0,
       totalCount = 0
 
-    if (Array.isArray(locations)) {
-      for (const loc of locations) {
+    if (Array.isArray(ES.locations)) {
+      for (const loc of ES.locations) {
         successCount += +this._loadLoc(loc)
         totalCount += 1
       }
     }
-    if (Array.isArray(edges)) {
-      for (const edge of edges) {
+    if (Array.isArray(ES.edges)) {
+      for (const edge of ES.edges) {
         successCount += +this._loadEdge(edge)
         totalCount += 1
       }
     }
 
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
     return [successCount, totalCount]
   }
 
@@ -216,13 +229,17 @@ export default class CanvasStore {
   /**
    * Wipe all data loaded into the stores and clear the canvas.
    */
-  clear = () => {
+  clear = (updateReact = true) => {
     this.locationMap.clear()
     this.edgeMap.clear()
 
     this.changelog.clear()
 
+    this.select(null, false)
     this.clearCanvas()
+    if (updateReact && this.updateReact) {
+      this.updateReact()
+    }
   }
 
   /**
@@ -488,7 +505,6 @@ export default class CanvasStore {
     }
     // add all our event listeners
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
-    this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
     this.canvas.addEventListener('dblclick', this.dblClickHandler, true)
     // re/set the drawing interval
     if (this.intervalID) clearInterval(this.intervalID)
@@ -618,7 +634,11 @@ export default class CanvasStore {
   }
 
   dblClickHandler = (e: MouseEvent) => {
-    this.createLocAtMouse(this._findMouse(e))
+    e.preventDefault()
+    const R = this.createLocAtMouse(this._findMouse(e))
+    if (R && this.updateReact) {
+      this.updateReact()
+    }
     this.valid = false
   }
 
@@ -663,7 +683,7 @@ export default class CanvasStore {
     if (!this.addLoc(loc)) return null
 
     if (select) {
-      this.select(key)
+      this.select(key, false)
     }
 
     return loc
@@ -673,12 +693,27 @@ export default class CanvasStore {
    * Handles clicking on the canvas, including de/selecting locations/edges.
    */
   mouseDownHandler = (e: MouseEvent) => {
+    if (e.buttons === 1 || (!e.buttons && e.button === 0)) {
+      console.debug('mDH: button is primary', e)
+    } else if (typeof e.button !== 'number' && typeof e.buttons !== 'number') {
+      console.debug('mDH: no `button/s` property.', e)
+    } else if (e.button !== 0 && e.buttons !== 1) {
+      console.debug('mDH: non-primary button, returning.', e)
+      return
+    } else if (e.buttons !== 1) {
+      console.debug('mDH: `buttons` =', e.buttons)
+    } else {
+      console.debug('mDH: e.button === e.buttons === 1', e)
+    }
+    e.preventDefault()
+
+    if (document.activeElement !== this.canvas) this.canvas.focus()
+
     const prevSelected = this.selection
     const point = this._findMouse(e)
     let selectedLoc =
       this.getFirstLocationAt(point) || this.getFirstEdgeAt(point)
 
-    console.debug('prevSelected:', prevSelected, 'selected:', selectedLoc)
     const isAddMod = e[this.addMod]
 
     if (selectedLoc instanceof Location) {
@@ -700,13 +735,13 @@ export default class CanvasStore {
         }
       } else {
         this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
+        this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
         const {x, y} = selectedLoc
         this.select(selectedLoc.key, false, diffPointed(point, {x, y}))
         this.changelog.newGrab(selectedLoc, {x, y})
       }
     } else if (selectedLoc instanceof Edge) {
       // selected an edge; that's not really an option yet though
-      console.debug('AN EDGE', selectedLoc)
       this.select(selectedLoc.key)
     } else if (prevSelected instanceof Location && !selectedLoc && isAddMod) {
       // Add-Modifier is held and prevSelected, create a Location and Edge
@@ -727,6 +762,7 @@ export default class CanvasStore {
     }
     this.dragoff = null
     this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
+    this.canvas.removeEventListener('mouseup', this.mouseUpHandler, true)
   }
 
   mouseMoveHandler = (e: MouseEvent) => {

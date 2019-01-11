@@ -5,7 +5,7 @@ interface State {
   message: string
 }
 
-export default class DataImporter extends React.Component<Props, State> {
+export class DataImporter extends React.Component<Props, State> {
   textAreaRef: React.RefObject<HTMLTextAreaElement>
   constructor(props: Props) {
     super(props)

@@ -43,7 +43,6 @@ export async function loadMapSrc(mapSrc: HTMLImageElement | string) {
 
   if (!mapSrc.length) {
     // No image content, so nothing to wait for
-    console.debug('!mapSrc.length')
     return null
   }
 
@@ -53,7 +52,6 @@ export async function loadMapSrc(mapSrc: HTMLImageElement | string) {
     img.onerror = img.onload = (e: any) => resolve(e)
     img.src = mapSrc as string
   })
-  console.debug('success?', event)
 
   return event.type === 'load' ? img : null
 }

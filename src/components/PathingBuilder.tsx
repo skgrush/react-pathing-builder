@@ -1,5 +1,7 @@
 import * as React from 'react'
 
+import '../styles.css'
+
 import {
   Pointed,
   StateButtonBoxProps,
@@ -8,18 +10,17 @@ import {
   ChangesExporterProps,
   DataExporterProps,
   ModularComponentProp,
-} from './interfaces'
+} from '../interfaces'
 import {
   StateButtonBox,
   PropertiesPanel,
   ChangesExporter,
   DataExporter,
-} from './components'
-import CanvasStore from './state/CanvasStore'
-import {loadMapSrc, fitBoxInBox} from './utils'
-
-import './styles.css'
-import DataImporter from './components/DataImporter'
+  DataImporter,
+  PBCanvas,
+} from './'
+import CanvasStore from '../state/CanvasStore'
+import {loadMapSrc, fitBoxInBox, ClassNames} from '../utils'
 
 interface ModularProps {
   stateButtonBoxComponent?: React.ComponentClass<StateButtonBoxProps> | null
@@ -29,7 +30,7 @@ interface ModularProps {
   dataExporterComponent?: React.ComponentClass<DataExporterProps> | null
 }
 
-interface Props extends ModularProps {
+export interface Props extends ModularProps {
   mapSrc: HTMLImageElement | string | null
   boundingWidth?: number
   boundingHeight?: number
@@ -37,33 +38,27 @@ interface Props extends ModularProps {
   className?: string
 }
 
-interface LoadedState {
+interface BaseState {
+  className: string
+}
+
+interface LoadedState extends BaseState {
   store: CanvasStore
   mapImg: HTMLImageElement
   width: number
   height: number
-  className: string
-  canvasClassName: string
 }
-interface NotLoadedState {
+interface NotLoadedState extends BaseState {
   store: null
   mapImg: null
   width: null
   height: null
-  className: string
-  canvasClassName: string
 }
 
 type State = LoadedState | NotLoadedState
 
-const FakeChangelog = Object.freeze({
-  undo: () => false,
-  redo: () => false,
-  undoSize: 0,
-  redoSize: 0,
-})
-
 class PathingBuilder extends React.Component<Props, State> {
+  readonly defaultClassName = 'pathing-builder'
   canvas: React.RefObject<HTMLCanvasElement>
 
   get StateButtonBox() {
@@ -82,17 +77,32 @@ class PathingBuilder extends React.Component<Props, State> {
     return this.getter('dataExporterComponent', DataExporter)
   }
 
+  get passProps() {
+    const {
+      mapSrc,
+      boundingWidth,
+      boundingHeight,
+      pixelOffset,
+      children,
+      className,
+      stateButtonBoxComponent,
+      propertiesPanelComponent,
+      ...otherProps
+    } = this.props
+
+    return otherProps
+  }
+
   constructor(props: Props) {
     super(props)
 
-    const classNames = PathingBuilder._makeclassNames(this.props.className)
+    const {className} = ClassNames.updateComponent(this)
     this.state = {
       store: null,
       mapImg: null,
       width: null,
       height: null,
-      className: classNames.join(' '),
-      canvasClassName: PathingBuilder._makeCanvasClassNames(classNames),
+      className,
     }
     this.canvas = React.createRef()
   }
@@ -110,9 +120,7 @@ class PathingBuilder extends React.Component<Props, State> {
 
   componentDidUpdate(prevProps: Props) {
     if (prevProps.className !== this.props.className)
-      this.setState({
-        ...PathingBuilder._updateClassNames(this.props.className),
-      })
+      this.setState(ClassNames.updateComponent(this))
 
     if (prevProps.mapSrc !== this.props.mapSrc) {
       if (this.props.mapSrc)
@@ -129,35 +137,9 @@ class PathingBuilder extends React.Component<Props, State> {
     }
   }
 
-  private get passProps() {
-    const {
-      mapSrc,
-      boundingWidth,
-      boundingHeight,
-      pixelOffset,
-      children,
-      className,
-      stateButtonBoxComponent,
-      propertiesPanelComponent,
-      ...otherProps
-    } = this.props
-
-    return otherProps
-  }
-
-  static _updateClassNames(className: string = '') {
-    const classNames = PathingBuilder._makeclassNames(className)
-    const canvasClassName = PathingBuilder._makeCanvasClassNames(classNames)
-    return {canvasClassName, className: className}
-  }
-
-  static _makeclassNames(className?: string) {
-    if (!className) return ['pathing-builder']
-    return ['pathing-builder'].concat(className.split(' '))
-  }
-
-  static _makeCanvasClassNames(classNames: string[]) {
-    return classNames.map(c => `${c}-canvas`).join(' ')
+  public readonly updateReact = (callback?: () => void) => {
+    console.info('updateReact')
+    this.forceUpdate(callback)
   }
 
   private initCanvas = (canvas: HTMLCanvasElement) => {
@@ -173,11 +155,6 @@ class PathingBuilder extends React.Component<Props, State> {
     } else {
       store.updateParams({img: this.state.mapImg})
     }
-  }
-
-  public readonly updateReact = (callback?: () => void) => {
-    console.info('updateReact')
-    this.forceUpdate(callback)
   }
 
   /**
@@ -201,7 +178,12 @@ class PathingBuilder extends React.Component<Props, State> {
   }
 
   /**
-   * Helper for properties that retrieve Components
+   * Helper for properties that retrieve ComponentClasses from this.props.
+   * If the prop is null, return null (disable Component).
+   * If the prop is undefined, return the default ComponentClass.
+   *
+   * @param {string} propName - React prop associated with a ComponentClass.
+   * @param {ComponentClass} default_ - default ComponentClass.
    */
   private getter = <
     K extends keyof ModularProps,
@@ -229,24 +211,21 @@ class PathingBuilder extends React.Component<Props, State> {
 
   render() {
     const {mapImg, className, store} = this.state
+    const {
+      StateButtonBox,
+      PropertiesPanel,
+      DataImporter,
+      DataExporter,
+      passProps,
+    } = this
 
     if (!mapImg) {
       return (
-        <div {...this.passProps} className={className}>
+        <div {...passProps} className={className}>
           <span className="pb-message">Unable to load source image</span>
         </div>
       )
     }
-
-    // if (!store) {
-    //   return (
-    //     <div {...this.passProps} className={className}>
-    //       <span className="pb-message">CanvasStore not loaded</span>
-    //     </div>
-    //   )
-    // }
-
-    const {StateButtonBox, PropertiesPanel, DataImporter, DataExporter} = this
 
     return (
       <div {...this.passProps} className={className}>
@@ -254,8 +233,10 @@ class PathingBuilder extends React.Component<Props, State> {
           <StateButtonBox
             onClickUndo={store.changelog.undo}
             onClickRedo={store.changelog.redo}
+            onClickClear={() => store.clear()}
             undoCount={store.changelog.undoSize}
             redoCount={store.changelog.redoSize}
+            isEmpty={store.isEmpty}
           />
         )}
         {store && PropertiesPanel && (
@@ -268,11 +249,11 @@ class PathingBuilder extends React.Component<Props, State> {
           />
         )}
 
-        <canvas
-          ref={this.canvas}
-          className={this.state.canvasClassName}
-          width={mapImg.width || undefined}
-          height={mapImg.height || undefined}
+        <PBCanvas
+          canvasRef={this.canvas}
+          baseClassName={this.state.className}
+          width={mapImg.width}
+          height={mapImg.height}
         />
 
         {store && DataImporter && (
@@ -298,4 +279,4 @@ class PathingBuilder extends React.Component<Props, State> {
   }
 }
 
-export default PathingBuilder
+export {PathingBuilder}

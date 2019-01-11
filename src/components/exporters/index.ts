@@ -1,2 +1,2 @@
-export * from './ChangesExporter'
-export * from './DataExporter'
+export {ChangesExporter} from './ChangesExporter'
+export {DataExporter} from './DataExporter'

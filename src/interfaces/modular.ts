@@ -50,8 +50,12 @@ export interface StateButtonBoxProps {
   onClickUndo: (e?: React.MouseEvent) => void
   /** handler for request a redo in the canvas and change stores */
   onClickRedo: (e?: React.MouseEvent) => void
+  /** handler for request to clear the canvas/change stores. */
+  onClickClear: (e?: React.MouseEvent) => void
   undoCount: number
   redoCount: number
+  /** the canvas is empty */
+  isEmpty: boolean
 }
 
 export type LabelStyler = (loc: Location) => LabelStyleParams

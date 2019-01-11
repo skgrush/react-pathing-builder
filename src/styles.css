@@ -1,6 +1,7 @@
 div.pathing-builder {
   display: grid;
   grid-template-columns: 200px auto auto auto;
+  grid-template-rows: auto 1fr auto;
 }
 
 .pathing-builder > p {
@@ -8,10 +9,12 @@ div.pathing-builder {
 }
 
 .pathing-builder .pathing-builder-statebtnbox {
+  grid-row: 1;
   grid-column: 2;
 }
 
 .pathing-builder .pathing-builder-propertiespanel {
+  grid-row: 1 / span 3;
   grid-column: 1;
 }
 .pathing-builder .pathing-builder-propertiespanel > section > form > * {
