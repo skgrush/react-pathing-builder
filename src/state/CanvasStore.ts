@@ -520,7 +520,7 @@ export default class CanvasStore {
     console.debug('prepCanvas')
     const ctx = this.canvas.getContext('2d')
     if (ctx) {
-      ctx.font = 'Courier New 10pt'
+      ctx.font = '10pt Courier New'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       this.resetTransform(ctx)
@@ -848,7 +848,7 @@ export default class CanvasStore {
   }
 
   static defaultLabelStyler(loc: Readonly<Location>) {
-    return {fill: 'rgba(204,0,0,0.9)', font: 'Courier New 10pt'}
+    return {fill: 'rgba(204,0,0,0.9)', font: '10pt Courier New'}
   }
 
   static defaultLocStyler(loc: Readonly<Location>) {
