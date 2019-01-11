@@ -252,8 +252,8 @@ class PathingBuilder extends React.Component<Props, State> {
         <PBCanvas
           canvasRef={this.canvas}
           baseClassName={this.state.className}
-          width={mapImg.width}
-          height={mapImg.height}
+          width={this.state.width || undefined}
+          height={this.state.height || undefined}
         />
 
         {store && DataImporter && (
