@@ -15,7 +15,7 @@ import {
   EdgeExport,
   ExportSimple,
 } from '../interfaces'
-import {diffPointed, b64time, addPointed} from '../utils'
+import {diffPointed, b64time, addPointed, scalePointed} from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
 
@@ -120,10 +120,15 @@ export default class CanvasStore {
 
   get canvasDimensions(): Pointed {
     return this.img
-      ? {
-          x: this.img.width,
-          y: this.img.height,
-        }
+      ? scalePointed(
+          {
+            x: this.img.width,
+            y: this.img.height,
+          },
+          this.scaleRatio,
+          undefined,
+          true
+        )
       : {x: 0, y: 0}
   }
 
@@ -518,6 +523,7 @@ export default class CanvasStore {
       ctx.font = 'Courier New 10pt'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
+      this.resetTransform(ctx)
     }
     // add all our event listeners
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
@@ -531,6 +537,13 @@ export default class CanvasStore {
   private clearCanvas(ctx: CanvasRenderingContext2D | null = null) {
     if (!ctx) ctx = this.canvas.getContext('2d')
     if (ctx) ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+  }
+
+  private resetTransform(ctx: CanvasRenderingContext2D | null = null) {
+    if (!ctx) ctx = this.canvas.getContext('2d')
+    if (ctx) {
+      ctx.setTransform(this.scaleRatio, 0, 0, this.scaleRatio, 0, 0)
+    }
   }
 
   private draw = () => {
@@ -824,7 +837,12 @@ export default class CanvasStore {
     }
 
     if (this.pixelOffset) {
-      return diffPointed(point, this.pixelOffset)
+      // subtract pixelOffset from point in-place
+      diffPointed(point, this.pixelOffset, point)
+    }
+    if (this.scaleRatio !== 1) {
+      // scaled and rounded point
+      scalePointed(point, 1 / this.scaleRatio, point, true)
     }
     return point
   }

@@ -76,6 +76,27 @@ export function dotPointed(
 }
 
 /**
+ * Scalar multiplication of Point-like x,y pair.
+ */
+export function scalePointed(
+  a: Pointed,
+  scalar: number,
+  assignTo: Pointed = {} as any,
+  floor = false
+) {
+  if (floor)
+    return Object.assign(assignTo, {
+      x: Math.floor(scalar * a.x),
+      y: Math.floor(scalar * a.y),
+    })
+  else
+    return Object.assign(assignTo, {
+      x: scalar * a.x,
+      y: scalar * a.y,
+    })
+}
+
+/**
  * Distance calculation of a straight line.
  */
 export function euclideanDistance(P: Pointed, Q: Pointed) {
