@@ -2,17 +2,10 @@ import * as React from 'react'
 
 import {ShapeSymbolMap} from '../../drawables'
 import Location from '../../state/Location'
+import {toJSON} from '../../utils'
 
 interface Props {
   selected: Readonly<Location>
-}
-
-function toJSON(data: object) {
-  try {
-    return JSON.stringify(data)
-  } catch {
-    return data
-  }
 }
 
 const LocationProperties: React.SFC<Props> = (props: Props) => {
