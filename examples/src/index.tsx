@@ -41,8 +41,8 @@ class App extends React.Component<any, State> {
           <PathingBuilder
             className="funybuilder"
             mapSrc={this.state.imgSrc}
-            boundingWidth={600}
-            boundingHeight={400}
+            boundingWidth={900}
+            boundingHeight={700}
             pixelOffset={{x: 20, y: 50}}
           />
         )}
