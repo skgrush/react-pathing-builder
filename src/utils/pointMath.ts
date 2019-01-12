@@ -97,6 +97,18 @@ export function scalePointed(
 }
 
 /**
+ * Limit a Point-like x,y pair between (0,0) and a given pair.
+ *
+ * If `limited` exceeds the bounds, rewrite its values.
+ */
+export function boundPointed(target: Pointed, limit: Pointed) {
+  if (target.x < 0) target.x = 0
+  else if (target.x > limit.x) target.x = limit.x
+  if (target.y < 0) target.y = 0
+  else if (target.y > limit.y) target.y = limit.y
+}
+
+/**
  * Distance calculation of a straight line.
  */
 export function euclideanDistance(P: Pointed, Q: Pointed) {
