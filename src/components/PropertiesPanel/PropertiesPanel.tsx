@@ -5,6 +5,8 @@ import Edge from '../../state/Edge'
 import {LocationForm} from './LocationForm'
 
 import {PropertiesPanelProps} from '../../interfaces'
+import {EdgeProperties} from './EdgeProperties'
+import {EdgeForm} from './EdgeForm'
 
 interface PropertiesPanelState {
   which: 'Location' | 'Edge' | ''
@@ -30,18 +32,32 @@ export class PropertiesPanel extends React.Component<
     }
   }
 
-  componentDidUpdate(prevProps: PropertiesPanelProps) {}
+  componentDidUpdate(prevProps: PropertiesPanelProps) {
+    if (this.props.selected !== prevProps.selected)
+      this.setState({
+        which: whichClassName(this.props.selected),
+      })
+  }
 
-  get name() {
-    if (!this.props.selected) return ''
-    switch (this.state.which) {
-      case 'Location':
-        return (this.props.selected as Readonly<Location>).name
-      case 'Edge':
-        return (this.props.selected as Readonly<Edge>).key
-      default:
-        return ''
+  private inner = () => {
+    if (this.props.selected instanceof Location) {
+      return (
+        <LocationForm
+          selected={this.props.selected}
+          modifyLocation={this.props.modifyLocation}
+          deleteLocation={this.props.deleteLocation}
+        />
+      )
     }
+    if (this.props.selected instanceof Edge) {
+      return (
+        <EdgeForm
+          selected={this.props.selected}
+          deleteEdge={this.props.deleteEdge}
+        />
+      )
+    }
+    return null
   }
 
   render() {
@@ -49,19 +65,9 @@ export class PropertiesPanel extends React.Component<
       <div className="pathing-builder-propertiespanel">
         <section>
           <header>
-            <h6>{this.name}</h6>
-            <p>{this.state.which}</p>
+            <h5>{String(this.props.selected || 'no selection')}</h5>
           </header>
-          {this.props.selected instanceof Location ? (
-            <LocationForm
-              selected={this.props.selected}
-              modifyLocation={this.props.modifyLocation}
-              deleteLocation={this.props.deleteLocation}
-            />
-          ) : null}
-          {this.props.selected instanceof Edge
-            ? 'Nope, not implemented, sorry'
-            : null}
+          {this.inner()}
         </section>
       </div>
     )
