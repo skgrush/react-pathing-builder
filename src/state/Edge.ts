@@ -72,4 +72,8 @@ export default class Edge {
       weight: this._weight,
     }
   }
+
+  toString() {
+    return `[Edge ${JSON.stringify(this.key)}]`
+  }
 }
