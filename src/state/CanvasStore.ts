@@ -14,11 +14,11 @@ import {
   LocationExport,
   EdgeExport,
   ExportSimple,
+  DimensionBox,
 } from '../interfaces'
 import {
   diffPointed,
   b64time,
-  addPointed,
   ClickModifier,
   CLICK_MODIFIERS,
   modifiers,
@@ -26,6 +26,8 @@ import {
   isRedo,
   MODIFIER_KEYS,
   handleArrowKey,
+  scalePointed,
+  drawCornerText,
 } from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
@@ -40,6 +42,7 @@ const DEFAULT_RADIUS = 10
 interface Parameters {
   img?: HTMLImageElement | null
   canvas?: HTMLCanvasElement
+  scaleRatio?: number
   refreshInterval?: number
   pixelOffset?: Pointed
   weightScale?: number
@@ -59,6 +62,8 @@ export default class CanvasStore {
   private img: HTMLImageElement | null = null
   /** the actual canvas to draw on */
   private canvas: HTMLCanvasElement
+  /** factor to scale the canvas by */
+  private scaleRatio: number = 1
   /** milliseconds between redraw frame requests */
   private refreshInterval: number = Math.floor(1000 / 15)
   /** offset of the canvas, i.e. left/top padding + border */
@@ -118,13 +123,14 @@ export default class CanvasStore {
     return this.weightScaleMult
   }
 
-  get canvasDimensions(): Pointed {
-    return this.img
-      ? {
-          x: this.img.width,
-          y: this.img.height,
-        }
-      : {x: 0, y: 0}
+  /**
+   * internal dimensions of the canvas in pixels.
+   */
+  get canvasDimensions(): DimensionBox {
+    return {
+      width: this.canvas.width / this.scaleRatio,
+      height: this.canvas.height / this.scaleRatio,
+    }
   }
 
   constructor(params: ConstructorParameters) {
@@ -253,7 +259,14 @@ export default class CanvasStore {
    */
   updateParams = (params: Parameters, first?: boolean) => {
     console.debug('updateParams', params)
-    const {img, pixelOffset, canvas, refreshInterval, selectionStroke} = params
+    const {
+      img,
+      pixelOffset,
+      canvas,
+      refreshInterval,
+      selectionStroke,
+      scaleRatio,
+    } = params
 
     if (img !== undefined) this.setImg(img)
 
@@ -272,9 +285,15 @@ export default class CanvasStore {
       this.pixelOffset = Object.assign(this.pixelOffset || {}, {x, y})
     }
 
-    if ((canvas && this.canvas !== canvas) || refreshInterval || first) {
+    if (
+      (canvas && this.canvas !== canvas) ||
+      refreshInterval ||
+      first ||
+      scaleRatio
+    ) {
       if (canvas) this.canvas = canvas
       if (refreshInterval) this.refreshInterval = refreshInterval
+      if (scaleRatio) this.scaleRatio = scaleRatio
       this.prepCanvas()
     }
 
@@ -502,11 +521,13 @@ export default class CanvasStore {
     console.debug('prepCanvas')
     const ctx = this.canvas.getContext('2d')
     if (ctx) {
-      ctx.font = 'Courier New 10pt'
+      ctx.font = '10pt Courier New'
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
+      this.resetTransform(ctx)
     }
     // add all our event listeners
+    this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
     this.canvas.addEventListener('mousedown', this.mouseDownHandler, true)
     this.canvas.addEventListener('dblclick', this.dblClickHandler, true)
     this.canvas.addEventListener('keydown', this.keyDownHandler, true)
@@ -518,7 +539,19 @@ export default class CanvasStore {
 
   private clearCanvas(ctx: CanvasRenderingContext2D | null = null) {
     if (!ctx) ctx = this.canvas.getContext('2d')
-    if (ctx) ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    if (ctx) {
+      const {width, height} = this.canvasDimensions
+      ctx.clearRect(0, 0, width, height)
+      return true
+    }
+    return false
+  }
+
+  private resetTransform(ctx: CanvasRenderingContext2D | null = null) {
+    if (!ctx) ctx = this.canvas.getContext('2d')
+    if (ctx) {
+      ctx.setTransform(this.scaleRatio, 0, 0, this.scaleRatio, 0, 0)
+    }
   }
 
   private draw = () => {
@@ -574,6 +607,21 @@ export default class CanvasStore {
     } else {
       edge.connection.draw(ctx)
     }
+  }
+
+  /**
+   * helper for drawing the mouse coords at the bottom of the screen.
+   * Expects to be called outside of the normal drawing cycle.
+   */
+  private _drawMouseCoords(coords: Pointed) {
+    const ctx = this.canvas.getContext('2d')
+    if (!ctx) return false
+    return drawCornerText(
+      `Mouse: (${coords.x}, ${coords.y})`,
+      ctx,
+      this.canvasDimensions,
+      this.scaleRatio
+    )
   }
 
   /**
@@ -738,7 +786,7 @@ export default class CanvasStore {
           this.select(selectedLoc.key)
         }
       } else {
-        this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
+        //this.canvas.addEventListener('mousemove', this.mouseMoveHandler, true)
         this.canvas.addEventListener('mouseup', this.mouseUpHandler, true)
         const {x, y} = selectedLoc
         this.select(selectedLoc.key, false, diffPointed(point, {x, y}))
@@ -765,7 +813,7 @@ export default class CanvasStore {
       this.changelog.newDrop(selection, {x, y})
     }
     this.dragoff = null
-    this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
+    //this.canvas.removeEventListener('mousemove', this.mouseMoveHandler, true)
     this.canvas.removeEventListener('mouseup', this.mouseUpHandler, true)
   }
 
@@ -778,8 +826,12 @@ export default class CanvasStore {
     if (this.valid && this.dragoff && this.selection instanceof Location) {
       const point = this._findMouse(e)
 
-      diffPointed(point, this.dragoff, this.selection)
+      // move the selection
+      this.selection.moveTo(diffPointed(point, this.dragoff))
+      this._drawMouseCoords(point)
       this.valid = false
+    } else {
+      this._drawMouseCoords(this._findMouse(e))
     }
   }
 
@@ -855,13 +907,18 @@ export default class CanvasStore {
     }
 
     if (this.pixelOffset) {
-      return diffPointed(point, this.pixelOffset)
+      // subtract pixelOffset from point in-place
+      diffPointed(point, this.pixelOffset, point)
+    }
+    if (this.scaleRatio !== 1) {
+      // scaled and rounded point
+      scalePointed(point, 1 / this.scaleRatio, point, true)
     }
     return point
   }
 
   static defaultLabelStyler(loc: Readonly<Location>) {
-    return {fill: 'rgba(204,0,0,0.9)', font: 'Courier New 10pt'}
+    return {fill: 'rgba(204,0,0,0.9)', font: '10pt Courier New'}
   }
 
   static defaultLocStyler(loc: Readonly<Location>) {

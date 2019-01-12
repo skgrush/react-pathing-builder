@@ -40,6 +40,7 @@ export interface Props extends ModularProps {
 
 interface BaseState {
   className: string
+  scaleRatio: number
 }
 
 interface LoadedState extends BaseState {
@@ -103,6 +104,7 @@ class PathingBuilder extends React.Component<Props, State> {
       width: null,
       height: null,
       className,
+      scaleRatio: 1,
     }
     this.canvas = React.createRef()
   }
@@ -150,10 +152,14 @@ class PathingBuilder extends React.Component<Props, State> {
         pixelOffset: this.props.pixelOffset,
         img: this.state.mapImg,
         updateReact: this.updateReact,
+        scaleRatio: this.state.scaleRatio,
       })
       this.setState({store})
     } else {
-      store.updateParams({img: this.state.mapImg})
+      store.updateParams({
+        img: this.state.mapImg,
+        scaleRatio: this.state.scaleRatio,
+      })
     }
   }
 
@@ -161,19 +167,24 @@ class PathingBuilder extends React.Component<Props, State> {
    * Process for updating state with a new mapImg (or null)
    */
   private updateWithNewMap = (mapImg: HTMLImageElement | null) => {
-    console.debug('updateWithNewMap:', mapImg)
+    console.debug('updateWithNewMap:', mapImg, this.props)
     if (mapImg) {
       if (this.props.boundingWidth && this.props.boundingHeight) {
-        const {width, height} = fitBoxInBox(mapImg, {
+        const {width, height, scaleRatio} = fitBoxInBox(mapImg, {
           width: this.props.boundingWidth,
           height: this.props.boundingHeight,
         })
-        this.setState({mapImg, width, height})
+        this.setState({mapImg, width, height, scaleRatio})
       } else {
-        this.setState({mapImg, width: mapImg.width, height: mapImg.height})
+        this.setState({
+          mapImg,
+          width: mapImg.width,
+          height: mapImg.height,
+          scaleRatio: 1,
+        })
       }
     } else {
-      this.setState({mapImg: null, width: null, height: null})
+      this.setState({mapImg: null, width: null, height: null, scaleRatio: 1})
     }
   }
 
@@ -252,8 +263,8 @@ class PathingBuilder extends React.Component<Props, State> {
         <PBCanvas
           canvasRef={this.canvas}
           baseClassName={this.state.className}
-          width={mapImg.width}
-          height={mapImg.height}
+          width={this.state.width || undefined}
+          height={this.state.height || undefined}
         />
 
         {store && DataImporter && (

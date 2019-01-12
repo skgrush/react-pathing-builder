@@ -76,6 +76,27 @@ export function dotPointed(
 }
 
 /**
+ * Scalar multiplication of Point-like x,y pair.
+ */
+export function scalePointed(
+  a: Pointed,
+  scalar: number,
+  assignTo: Pointed = {} as any,
+  floor = false
+) {
+  if (floor)
+    return Object.assign(assignTo, {
+      x: Math.floor(scalar * a.x),
+      y: Math.floor(scalar * a.y),
+    })
+  else
+    return Object.assign(assignTo, {
+      x: scalar * a.x,
+      y: scalar * a.y,
+    })
+}
+
+/**
  * Limit a Point-like x,y pair between (0,0) and a given pair.
  *
  * If `limited` exceeds the bounds, rewrite its values.

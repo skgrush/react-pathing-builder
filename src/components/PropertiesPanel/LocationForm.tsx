@@ -172,7 +172,7 @@ export class LocationForm extends React.Component<Props, State> {
                   name="x"
                   type="number"
                   min={0}
-                  max={canvasDimensions.x}
+                  max={canvasDimensions.width}
                   defaultValue={selected.x.toString()}
                 />
               </td>
@@ -185,7 +185,7 @@ export class LocationForm extends React.Component<Props, State> {
                   name="y"
                   type="number"
                   min={0}
-                  max={canvasDimensions.y}
+                  max={canvasDimensions.height}
                   defaultValue={selected.y.toString()}
                 />
               </td>
