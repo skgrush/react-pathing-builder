@@ -169,11 +169,16 @@ class PathingBuilder extends React.Component<Props, State> {
   private updateWithNewMap = (mapImg: HTMLImageElement | null) => {
     console.debug('updateWithNewMap:', mapImg, this.props)
     if (mapImg) {
-      if (this.props.boundingWidth && this.props.boundingHeight) {
-        const {width, height, scaleRatio} = fitBoxInBox(mapImg, {
+      if (this.props.boundingWidth || this.props.boundingHeight) {
+        let {width, height, scaleRatio} = fitBoxInBox(mapImg, {
           width: this.props.boundingWidth,
           height: this.props.boundingHeight,
         })
+        console.info('scaleRatio', scaleRatio)
+        if (scaleRatio > 1) {
+          scaleRatio = 1
+          ;[width, height] = [mapImg.width, mapImg.height]
+        }
         this.setState({mapImg, width, height, scaleRatio})
       } else {
         this.setState({

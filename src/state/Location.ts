@@ -8,7 +8,7 @@ import {
 } from '../drawables'
 import {CanvasStyleType, Pointed} from '../interfaces'
 import CanvasStore from './CanvasStore'
-import {b64time} from '../utils'
+import {b64time, describeKeyName} from '../utils'
 import {LocationExport} from '../interfaces'
 
 export interface LocationLike {
@@ -53,6 +53,8 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   readonly data: LocationLike & any
   readonly neighborKeys: string[]
 
+  private _description: string
+
   shape: T
   label: Label
 
@@ -62,6 +64,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
 
   set name(val: string) {
     this._name = String(val)
+    this._description = describeKeyName(this.key, this._name)
     if (this.label) this.label.text = this._name
   }
 
@@ -91,6 +94,7 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
   ) {
     this.key = data.key ? String(data.key) : b64time()
     this._name = data.name ? String(data.name) : this.key
+    this._description = describeKeyName(this.key, this._name)
     this._x = +data.x
     this._y = +data.y
     this.store = store
@@ -229,5 +233,13 @@ export default class Location<T extends Shape = Shape> implements LocationLike {
       shape: this.shape.constructor.name,
       neighborKeys: [...neighborKeys],
     }
+  }
+
+  toString() {
+    return `[Location ${this._description}]`
+  }
+
+  describe() {
+    return this._description
   }
 }

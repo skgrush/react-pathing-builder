@@ -1,5 +1,6 @@
 import * as React from 'react'
 import {BaseExporterProps} from '../../interfaces'
+import {toJSON} from '../../utils'
 
 export interface BaseState {
   dataString: string
@@ -51,7 +52,7 @@ export abstract class BaseJsonExporter<
   }
 
   private stringify(value: any) {
-    return JSON.stringify(value, null, this.props.space || 2)
+    return toJSON(value, this.props.space || 2) || ''
   }
 
   render() {

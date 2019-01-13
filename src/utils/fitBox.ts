@@ -10,10 +10,13 @@ interface ScaledDimensionBox extends DimensionBox {
  */
 export function fitBoxInBox(
   inner: DimensionBox,
-  outer: DimensionBox
+  outer: Partial<DimensionBox>
 ): ScaledDimensionBox {
   let {width, height} = inner
-  const scaleRatio = Math.min(outer.width / width, outer.height / height)
+  const outerWidth = outer.width || Infinity
+  const outerHeight = outer.height || Infinity
+
+  const scaleRatio = Math.min(outerWidth / width, outerHeight / height)
   width *= scaleRatio
   height *= scaleRatio
   return {width, height, scaleRatio}
