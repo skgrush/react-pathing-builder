@@ -12,15 +12,16 @@
   "author": "Samuel K. Grush",
   "license": "MIT",
   "files": [
-    "lib/**/*"
+    "lib"
   ],
   "scripts": {
-    "start": "webpack-dev-server --mode development",
+    "start": "webpack-dev-server --config webpack.dev.js",
     "test": "jest --config jestconfig.json",
     "build": "yarn clean:build && yarn build:types && yarn build:js && yarn build:css",
-    "build:js": "babel src -o lib/index.js --extensions '.ts,.tsx' --source-maps inline",
+    "build:js": "webpack --config webpack.build.js",
     "build:types": "tsc --emitDeclarationOnly --outFile lib/index.d.ts",
     "build:css": "cp src/styles.css lib/",
+    "babel:build:js": "babel src -o lib/index.js --extensions '.ts,.tsx' --source-maps inline",
     "clean:build": "rm -rf lib",
     "clean:nm": "rm -rf node_modules",
     "type-check": "tsc --noEmit tsc",
@@ -53,6 +54,7 @@
     "typescript": "^3.2.2",
     "webpack": "^4.27.1",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.1.10"
+    "webpack-dev-server": "^3.1.10",
+    "webpack-merge": "^4.2.1"
   }
 }

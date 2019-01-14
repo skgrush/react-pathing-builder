@@ -1,14 +1,15 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "es6",
     "moduleResolution": "node",
     "declaration": true,
     "jsx": "react",
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "rootDir": "src/"
+    "rootDir": "src/",
+    "outDir": "lib/"
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/__tests__/*"]
