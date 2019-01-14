@@ -1,4 +1,4 @@
-import {Pointed} from '../interfaces'
+import {Pointed, DimensionBox} from '../interfaces'
 
 export function numAvg(a: number, b: number) {
   return (a + b) / 2
@@ -101,11 +101,12 @@ export function scalePointed(
  *
  * If `limited` exceeds the bounds, rewrite its values.
  */
-export function boundPointed(target: Pointed, limit: Pointed) {
+export function boundPointed(target: Pointed, limit: DimensionBox | Pointed) {
+  const {x, y} = PointedOrDimensionBox(limit)
   if (target.x < 0) target.x = 0
-  else if (target.x > limit.x) target.x = limit.x
+  else if (target.x > x) target.x = Math.floor(x)
   if (target.y < 0) target.y = 0
-  else if (target.y > limit.y) target.y = limit.y
+  else if (target.y > y) target.y = Math.floor(y)
 }
 
 /**
@@ -134,3 +135,20 @@ export function perpendicularDistance(L1: Pointed, L2: Pointed, P: Pointed) {
 Object.assign(window, {
   perpendicularDistance,
 })
+
+/**
+ * Discriminate between Pointed or DimensionBox. Convert to a Pointed.
+ *
+ * Tries to use `x` and `y` properties first, then `width` and `height`.
+ */
+export function PointedOrDimensionBox(thing: Pointed | DimensionBox): Pointed {
+  const {x, y} = <Pointed>thing
+  if (x !== undefined && y !== undefined) {
+    return {x, y}
+  }
+  const {width, height} = <DimensionBox>thing
+  return {
+    x: width,
+    y: height,
+  }
+}
