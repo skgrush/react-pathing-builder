@@ -1,5 +1,4 @@
 import CanvasStore from '../CanvasStore'
-import {Shape} from '../../drawables'
 import Location, {LocationMutablePropName} from '../Location'
 import Edge, {EdgeMutablePropName} from '../Edge'
 import {
@@ -12,6 +11,8 @@ import {
   ChangeDrop,
 } from './Change'
 import {ChangeSubclass, ChangeInstance} from '../../interfaces'
+import {ExportStruct} from '../../interfaces' // required for typescript .d.ts
+import {Shape, ShapeParams} from '../../drawables' // required for typescript .d.ts
 import {ChangeError} from '../../errors'
 import {Pointed} from '../../interfaces'
 import {equalPointed} from '../../utils'
