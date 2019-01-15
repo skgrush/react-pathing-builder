@@ -12,7 +12,7 @@
   "author": "Samuel K. Grush",
   "license": "MIT",
   "files": [
-    "lib"
+    "lib/**/*"
   ],
   "scripts": {
     "start": "webpack-dev-server --config webpack.dev.js",
@@ -25,7 +25,8 @@
     "clean:build": "rm -rf lib",
     "clean:nm": "rm -rf node_modules",
     "type-check": "tsc --noEmit tsc",
-    "prebulishOnly": "yarn test"
+    "prebulishOnly": "yarn test",
+    "prepare": "yarn build"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.0",
