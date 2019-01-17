@@ -2,9 +2,8 @@
   "name": "react-pathing-builder",
   "version": "0.0.1",
   "description": "A React component for building pathing graphs on maps.",
-  "main": "lib/index.js",
-  "module": "src/index.ts",
-  "types": "lib/index.d.ts",
+  "main": "lib/react-pathing-builder.js",
+  "types": "lib/",
   "repository": {
     "type": "git",
     "url": "https://github.com/skgrush/react-pathing-builder.git"
@@ -19,12 +18,12 @@
     "test": "jest --config jestconfig.json",
     "build": "yarn clean:build && yarn build:types && yarn build:js && yarn build:css",
     "build:js": "webpack --config webpack.build.js",
-    "build:types": "tsc --emitDeclarationOnly --outFile lib/index.d.ts",
+    "build:types": "tsc --emitDeclarationOnly",
     "build:css": "cp src/styles.css lib/",
     "babel:build:js": "babel src -o lib/index.js --extensions '.ts,.tsx' --source-maps inline",
     "clean:build": "rm -rf lib",
     "clean:nm": "rm -rf node_modules",
-    "type-check": "tsc --noEmit tsc",
+    "type-check": "tsc --noEmit",
     "prebulishOnly": "yarn test",
     "prepare": "yarn build"
   },

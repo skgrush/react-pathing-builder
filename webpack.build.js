@@ -7,7 +7,9 @@ module.exports = merge(common, {
   mode: 'production',
   entry: './src/index.ts',
   output: {
-    filename: 'index.js',
     path: path.resolve(__dirname, 'lib'),
+    filename: 'react-pathing-builder.js',
+    library: '',
+    libraryTarget: 'commonjs',
   },
 })
