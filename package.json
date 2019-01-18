@@ -2,6 +2,7 @@
   "name": "react-pathing-builder",
   "version": "0.0.1",
   "description": "A React component for building pathing graphs on maps.",
+  "homepage": "https://skgrush.github.io/react-pathing-builder",
   "main": "lib/react-pathing-builder.js",
   "types": "lib/",
   "repository": {
@@ -25,7 +26,11 @@
     "clean:nm": "rm -rf node_modules",
     "type-check": "tsc --noEmit",
     "prebulishOnly": "yarn test",
-    "prepare": "yarn build"
+    "prepare": "yarn build",
+    "build:dist": "webpack --config webpack.dist.js",
+    "cp:dist": "cp examples/src/* examples/dist/",
+    "predeploy": "yarn cp:dist && yarn build:dist",
+    "deploy": "gh-pages -d examples/dist"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.0",
