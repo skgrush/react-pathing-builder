@@ -47,7 +47,7 @@ class App extends React.Component<any, State> {
     console.log(this.state)
     return (
       <main>
-        <div>
+        <section className="pre-sect">
           <h2>
             Demo of <code>react-pathing-builder</code> PathingBuilder Component
           </h2>
@@ -61,7 +61,7 @@ class App extends React.Component<any, State> {
             prop with a uploaded image, an entered URL, or with a default image
             URL.
           </p>
-        </div>
+        </section>
         <label htmlFor="upload">Upload:</label>
         <input name="upload" type="file" onChange={this.onUpload} />
         <label htmlFor="url">URL:</label>
@@ -89,6 +89,34 @@ class App extends React.Component<any, State> {
             pixelOffset={{x: 20, y: 50}}
           />
         )}
+        <section className="post-sect">
+          <h4>Controls:</h4>
+          <p>Double-click to add a new Location.</p>
+          <p>
+            While selecting a Location, <kbd>Shift</kbd>+click another Location
+            to create an Edge or <kbd>Shift</kbd>+click empty space to create an
+            Edge to a new Location.
+          </p>
+          <p>
+            <kbd>Backspace</kbd>/<kbd>Delete</kbd> will delete the selected
+            Location or Edge.
+          </p>
+          <p>
+            <kbd>&#8984;</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Z</kbd>{' '}
+            performs Undo, and adding <kbd>Shift</kbd> performs Redo.
+          </p>
+          <p>Locations can be moved three ways:</p>
+          <ul>
+            <li>using the Location Panel</li>
+            <li>by clicking-and-dragging</li>
+            <li>using the arrow keys</li>
+          </ul>
+          <p>
+            Arrow keys with no modifiers moves by 5px, <kbd>Opt</kbd>/
+            <kbd>Ctrl</kbd> moves by 1px (fine), <kbd>Shift</kbd> moves by 50px
+            (coarse).
+          </p>
+        </section>
       </main>
     )
   }
