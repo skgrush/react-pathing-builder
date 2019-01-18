@@ -1,7 +1,17 @@
-.pathing-builder.funybuilder {
-  //background: gray;
+#demo .funybuilder {
+  border: 3px inset gray;
+  padding: 2px;
 }
 
-.pathing-builder.funybuilder .pathing-builder-canvas {
+#demo .funybuilder-canvas {
   padding: 50px 20px !important;
+}
+
+#demo label {
+  float: left;
+}
+
+#demo input {
+  display: block;
+  margin-left: 6em;
 }
