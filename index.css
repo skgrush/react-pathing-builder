@@ -1,0 +1,7 @@
+.pathing-builder.funybuilder {
+  //background: gray;
+}
+
+.pathing-builder.funybuilder .pathing-builder-canvas {
+  padding: 50px 20px !important;
+}
