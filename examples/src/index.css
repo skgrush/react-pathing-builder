@@ -1,17 +1,38 @@
+#demo {
+  /* make sure the Fork-Me banner doesn't block any content */
+  margin-bottom: 100px;
+}
+
 #demo .funybuilder {
   border: 3px inset gray;
   padding: 2px;
 }
 
 #demo .funybuilder-canvas {
+  /* these must be accounted for with the `pixelOffset` prop! */
   padding: 50px 20px !important;
 }
 
-#demo label {
+#demo main > label {
   float: left;
 }
 
-#demo input {
+#demo main > input {
   display: block;
   margin-left: 6em;
+}
+
+#demo kbd {
+  background-color: #eee;
+  border-radius: 3px;
+  border: 1px solid #b4b4b4;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2),
+    0 2px 0 0 rgba(255, 255, 255, 0.7) inset;
+  color: #333;
+  display: inline-block;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 4px;
+  white-space: nowrap;
 }
