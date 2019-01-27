@@ -7,6 +7,7 @@ import {
   euclideanDistance,
   perpendicularDistance,
 } from '../utils'
+import {DEFAULT_CONNECTION_STROKE} from '../utils/defaults'
 
 export interface ConnectionParams {
   start: Drawable
@@ -18,7 +19,7 @@ export interface ConnectionParams {
 export default class Connection extends PathDrawable {
   start: Drawable
   end: Drawable
-  stroke: CanvasStyleType = '#000'
+  stroke: CanvasStyleType = DEFAULT_CONNECTION_STROKE
   strokeWidth: number = 3
 
   get x() {
