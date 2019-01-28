@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom'
 
 import PathingBuilder from '../../src'
 
-import '../../src/styles.css'
+import '../../src/styles.scss'
 import './index.css'
 
 interface State {

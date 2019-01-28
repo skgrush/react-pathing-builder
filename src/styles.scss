@@ -1,0 +1,88 @@
+/**
+ * Important specific defaults, values affect click accuracy!!
+ * If you override these values, make sure to pass `pixelOffset` param.
+ **/
+div.pathing-builder > canvas.pathing-builder-canvas {
+  padding: 0;
+  border-width: 0;
+}
+
+/** grid placements */
+.pathing-builder {
+  display: grid;
+  grid-template-columns: 200px auto auto auto;
+  grid-template-rows: auto 1fr auto;
+
+  .pathing-builder-statebtnbox {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  .pathing-builder-propertiespanel {
+    grid-row: 1 / span 3;
+    grid-column: 1;
+  }
+  .pathing-builder-canvas {
+    grid-column: 2 / span n;
+  }
+  .change-exporter,
+  .data-importer,
+  .data-exporter {
+    grid-row: 3;
+  }
+
+  .style-setter {
+    grid-column: 1;
+  }
+  .data-importer {
+    grid-column: 2;
+  }
+  .change-exporter {
+    grid-column: 3;
+  }
+  .data-exporter {
+    grid-column: 4;
+  }
+}
+
+/**
+ * Component styling
+ */
+.pathing-builder {
+  .pathing-builder-propertiespanel {
+    & > section > form > * {
+      border: 1px solid;
+      border-radius: 15px;
+    }
+    .json {
+      overflow-wrap: break-word;
+    }
+  }
+
+  .change-exporter,
+  .data-importer,
+  .data-exporter {
+    width: fit-content;
+    & > textarea {
+      display: block;
+    }
+  }
+
+  .style-setter {
+    label {
+      display: block;
+    }
+    input[type='color'] {
+      font-family: 'Courier New';
+      &:invalid {
+        border-color: #ffdddd;
+      }
+    }
+    &.no-picker input[type='color'] {
+      /** show color if no color picker is supported */
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      mix-blend-mode: exclusion;
+    }
+  }
+}
