@@ -63,3 +63,23 @@ div.pathing-builder > canvas.pathing-builder-canvas {
 .pathing-builder .data-exporter {
   grid-column: 4;
 }
+
+.pathing-builder .style-setter {
+  grid-column: 1;
+}
+.pathing-builder .style-setter label {
+  display: block;
+}
+.pathing-builder .style-setter input[type='color'] {
+  font-family: 'Courier New';
+}
+.pathing-builder .style-setter input[type='color']:invalid {
+  border-color: #ffdddd;
+}
+.pathing-builder .style-setter.no-picker input[type='color'] {
+  /** show color if no color picker is supported */
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  mix-blend-mode: exclusion;
+}
