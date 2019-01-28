@@ -52,9 +52,10 @@ interface Parameters {
   pixelOffset?: Pointed
   weightScale?: number
   addMod?: ClickModifier
-  selectionStroke?: CanvasStyleType
-  locStyleGetter?: LocationStyler
-  locShapeGetter?: LocationShaper
+  selectionStroke?: CanvasStyleType | null
+  locStyleGetter?: LocationStyler | null
+  locShapeGetter?: LocationShaper | null
+  labelStyleGetter?: LabelStyler | null
 }
 
 interface ConstructorParameters extends Parameters {
@@ -275,15 +276,33 @@ export default class CanvasStore {
 
     if (img !== undefined) this.setImg(img)
 
-    if (selectionStroke !== undefined) this.selectionStroke = selectionStroke
-
-    if (params.hasOwnProperty('locStyleGetter'))
+    if (selectionStroke !== undefined) {
+      this.selectionStroke = selectionStroke || DEFAULT_SELECTION_STROKE
+      this.valid = false
+    }
+    if (params.locStyleGetter !== undefined)
       this.locStyleGetter =
         params.locStyleGetter || CanvasStore.defaultLocStyler
 
-    if (params.hasOwnProperty('locShapeGetter'))
+    if (params.locShapeGetter !== undefined)
       this.locShapeGetter =
         params.locShapeGetter || CanvasStore.defaultLocShaper
+
+    if (params.labelStyleGetter !== undefined)
+      this.labelStyleGetter =
+        params.labelStyleGetter || CanvasStore.defaultLabelStyler
+
+    /** Update styles etc. */
+    if (params.locShapeGetter !== undefined) {
+      this.locationMap.forEach(L => L.updateShape())
+      this.valid = false
+    } else if (
+      params.locStyleGetter !== undefined ||
+      params.labelStyleGetter !== undefined
+    ) {
+      this.locationMap.forEach(L => L.updateStyle())
+      this.valid = false
+    }
 
     if (pixelOffset) {
       const {x, y} = pixelOffset
