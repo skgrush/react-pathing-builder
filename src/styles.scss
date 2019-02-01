@@ -67,6 +67,14 @@ div.pathing-builder > canvas.pathing-builder-canvas {
     }
   }
 
+  .data-importer {
+    & > .wrapper-button {
+      appearance: button;
+      -webkit-appearance: push-button;
+      -moz-appearance: button;
+    }
+  }
+
   .style-setter {
     label {
       display: block;

@@ -20,6 +20,25 @@ export class DataImporter extends React.Component<Props, State> {
     return this.props.lastChange !== null
   }
 
+  onClickOpen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const {currentTarget} = e
+
+    console.debug(currentTarget)
+    if (currentTarget.files && currentTarget.files[0]) {
+      const file = currentTarget.files[0]
+      console.debug('opened', file.name, file.type)
+
+      const fr = new FileReader()
+      fr.onloadend = (ev: ProgressEvent) => {
+        console.debug('loaded', fr.result, ev)
+        if (this.textAreaRef.current && typeof fr.result === 'string') {
+          this.textAreaRef.current.value = fr.result
+        }
+      }
+      fr.readAsText(file)
+    }
+  }
+
   onClickFormat = () => {
     if (!this.textAreaRef.current) return
 
@@ -85,6 +104,20 @@ export class DataImporter extends React.Component<Props, State> {
           rows={6}
           defaultValue={''}
         />
+        <button
+          disabled={readOnly}
+          className="wrapper-button"
+          onClick={e => (e.currentTarget.children[0] as any).click()}
+        >
+          Open File
+          <input
+            type="file"
+            onChange={this.onClickOpen}
+            disabled={readOnly}
+            accept=".json,application/json"
+            hidden
+          />
+        </button>
         <input
           type="button"
           value="format"
