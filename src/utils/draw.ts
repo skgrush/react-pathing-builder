@@ -1,4 +1,5 @@
 import {DimensionBox} from '../interfaces'
+import {DEFAULT_FONT_FAMILY} from './defaults'
 
 type Corner = TOP_LEFT | TOP_RIGHT | BOTTOM_RIGHT | BOTTOM_LEFT
 
@@ -39,7 +40,7 @@ export function drawCornerText(
   const {font, fillStyle, strokeStyle, lineWidth, textAlign, textBaseline} = ctx
 
   // change styles
-  ctx.font = `${fontSize}px Courier New`
+  ctx.font = `${fontSize}px ${DEFAULT_FONT_FAMILY}`
   ctx.strokeStyle = 'white'
   ctx.lineWidth = Math.ceil(2 / scaleRatio)
   ctx.fillStyle = 'black'

@@ -1,6 +1,6 @@
 import * as React from 'react'
 
-import {StylableParams, LabelStyleParams} from './geometry'
+import {StylableParams, LabelStyleParams, CanvasStyleType} from './geometry'
 import Location, {LocationLike, LocationMutableProps} from '../state/Location'
 import Edge, {EdgeMutable} from '../state/Edge'
 import {Shape, ShapeParams, ShapeSubclass} from '../drawables'
@@ -13,11 +13,17 @@ export type ModularComponentProp =
   | ChangesExporterProps
   | StateButtonBoxProps
   | PropertiesPanelProps
+  | StyleSetterProps
 
 export interface DataImporterProps {
   lastChange: ChangeStore['lastChange']
   importData: CanvasStore['loadData']
   space?: number
+}
+
+export interface StyleSetterProps {
+  lastChange: ChangeStore['lastChange']
+  styleUpdater: (arg: StyleUpdaterArg) => void
 }
 
 export interface BaseExporterProps {
@@ -63,3 +69,10 @@ export type LocationStyler = (loc: Location) => StylableParams
 export type LocationShaper = <P extends ShapeParams>(
   loc: Location<Shape<P>> | LocationLike & P
 ) => [ShapeSubclass<any>, P]
+
+export interface StyleUpdaterArg {
+  selectionStroke?: CanvasStyleType | null
+  locStyleGetter?: LocationStyler | null
+  locShapeGetter?: LocationShaper | null
+  labelStyleGetter?: LabelStyler | null
+}

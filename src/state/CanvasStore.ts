@@ -31,8 +31,13 @@ import {
 } from '../utils'
 import {UniquenessError} from '../errors'
 import ChangeStore from './changes/ChangeStore'
-
-const DEFAULT_RADIUS = 10
+import {
+  DEFAULT_SELECTION_STROKE,
+  DEFAULT_RADIUS,
+  DEFAULT_LABEL_FILL,
+  DEFAULT_FONT,
+  DEFAULT_LOC_FILL,
+} from '../utils/defaults'
 
 /**
  * The arguments and modifiable-properties of CanvasStore.
@@ -47,9 +52,10 @@ interface Parameters {
   pixelOffset?: Pointed
   weightScale?: number
   addMod?: ClickModifier
-  selectionStroke?: CanvasStyleType
-  locStyleGetter?: LocationStyler
-  locShapeGetter?: LocationShaper
+  selectionStroke?: CanvasStyleType | null
+  locStyleGetter?: LocationStyler | null
+  locShapeGetter?: LocationShaper | null
+  labelStyleGetter?: LabelStyler | null
 }
 
 interface ConstructorParameters extends Parameters {
@@ -73,7 +79,7 @@ export default class CanvasStore {
   /** mouse modifier for adding an Edge */
   private addMod: ClickModifier = 'shiftKey'
   /** highlight color/style of selected Locations or Edges */
-  private selectionStroke: CanvasStyleType = '#F6B'
+  private selectionStroke: CanvasStyleType = DEFAULT_SELECTION_STROKE
   /** Resolve label style from a Location */
   labelStyleGetter: LabelStyler = CanvasStore.defaultLabelStyler
   /** Resolve shape style from a Location */
@@ -270,15 +276,33 @@ export default class CanvasStore {
 
     if (img !== undefined) this.setImg(img)
 
-    if (selectionStroke !== undefined) this.selectionStroke = selectionStroke
-
-    if (params.hasOwnProperty('locStyleGetter'))
+    if (selectionStroke !== undefined) {
+      this.selectionStroke = selectionStroke || DEFAULT_SELECTION_STROKE
+      this.valid = false
+    }
+    if (params.locStyleGetter !== undefined)
       this.locStyleGetter =
         params.locStyleGetter || CanvasStore.defaultLocStyler
 
-    if (params.hasOwnProperty('locShapeGetter'))
+    if (params.locShapeGetter !== undefined)
       this.locShapeGetter =
         params.locShapeGetter || CanvasStore.defaultLocShaper
+
+    if (params.labelStyleGetter !== undefined)
+      this.labelStyleGetter =
+        params.labelStyleGetter || CanvasStore.defaultLabelStyler
+
+    /** Update styles etc. */
+    if (params.locShapeGetter !== undefined) {
+      this.locationMap.forEach(L => L.updateShape())
+      this.valid = false
+    } else if (
+      params.locStyleGetter !== undefined ||
+      params.labelStyleGetter !== undefined
+    ) {
+      this.locationMap.forEach(L => L.updateStyle())
+      this.valid = false
+    }
 
     if (pixelOffset) {
       const {x, y} = pixelOffset
@@ -521,7 +545,7 @@ export default class CanvasStore {
     console.debug('prepCanvas')
     const ctx = this.canvas.getContext('2d')
     if (ctx) {
-      ctx.font = '10pt Courier New'
+      ctx.font = DEFAULT_FONT
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       this.resetTransform(ctx)
@@ -918,11 +942,11 @@ export default class CanvasStore {
   }
 
   static defaultLabelStyler(loc: Readonly<Location>) {
-    return {fill: 'rgba(204,0,0,0.9)', font: '10pt Courier New'}
+    return {fill: DEFAULT_LABEL_FILL, font: DEFAULT_FONT}
   }
 
   static defaultLocStyler(loc: Readonly<Location>) {
-    return {fill: 'rgba(0,255,127,.9)'}
+    return {fill: DEFAULT_LOC_FILL}
   }
 
   /**

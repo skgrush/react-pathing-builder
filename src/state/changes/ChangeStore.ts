@@ -220,6 +220,7 @@ export default class ChangeStore {
     if (C.target instanceof Location) {
       this.ignoreNext += 1
       ret = this.canvasStore.addLoc(C.target)
+      C.target.updateStyle()
     } else if (C.target instanceof Edge) {
       this.ignoreNext += 1
       ret = this.canvasStore.createEdge(

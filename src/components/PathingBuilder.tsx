@@ -10,6 +10,7 @@ import {
   ChangesExporterProps,
   DataExporterProps,
   ModularComponentProp,
+  StyleSetterProps,
 } from '../interfaces'
 import {
   StateButtonBox,
@@ -18,6 +19,7 @@ import {
   DataExporter,
   DataImporter,
   PBCanvas,
+  StyleSetter,
 } from './'
 import CanvasStore from '../state/CanvasStore'
 import {loadMapSrc, fitBoxInBox, ClassNames} from '../utils'
@@ -28,6 +30,7 @@ interface ModularProps {
   dataImporterComponent?: React.ComponentClass<DataImporterProps> | null
   changesExporterComponent?: React.ComponentClass<ChangesExporterProps> | null
   dataExporterComponent?: React.ComponentClass<DataExporterProps> | null
+  styleSetterComponent?: React.ComponentClass<StyleSetterProps> | null
 }
 
 export interface Props extends ModularProps {
@@ -76,6 +79,10 @@ class PathingBuilder extends React.Component<Props, State> {
   }
   get DataExporter() {
     return this.getter('dataExporterComponent', DataExporter)
+  }
+
+  get StyleSetter() {
+    return this.getter('styleSetterComponent', StyleSetter)
   }
 
   get passProps() {
@@ -227,13 +234,7 @@ class PathingBuilder extends React.Component<Props, State> {
 
   render() {
     const {mapImg, className, store} = this.state
-    const {
-      StateButtonBox,
-      PropertiesPanel,
-      DataImporter,
-      DataExporter,
-      passProps,
-    } = this
+    const {passProps} = this
 
     if (!mapImg) {
       return (
@@ -245,8 +246,8 @@ class PathingBuilder extends React.Component<Props, State> {
 
     return (
       <div {...this.passProps} className={className}>
-        {store && StateButtonBox && (
-          <StateButtonBox
+        {store && this.StateButtonBox && (
+          <this.StateButtonBox
             onClickUndo={store.changelog.undo}
             onClickRedo={store.changelog.redo}
             onClickClear={() => store.clear()}
@@ -255,8 +256,8 @@ class PathingBuilder extends React.Component<Props, State> {
             isEmpty={store.isEmpty}
           />
         )}
-        {store && PropertiesPanel && (
-          <PropertiesPanel
+        {store && this.PropertiesPanel && (
+          <this.PropertiesPanel
             selected={store.selection}
             modifyLocation={store.modLoc}
             modifyEdge={store.modEdge}
@@ -272,22 +273,29 @@ class PathingBuilder extends React.Component<Props, State> {
           height={this.state.height || undefined}
         />
 
-        {store && DataImporter && (
-          <DataImporter
+        {store && this.DataImporter && (
+          <this.DataImporter
             lastChange={store.changelog.lastChange}
             importData={store.loadData}
           />
         )}
-        {store && ChangesExporter && (
-          <ChangesExporter
+        {store && this.ChangesExporter && (
+          <this.ChangesExporter
             lastChange={store.changelog.lastChange}
             exportData={store.changelog.exportChanges}
           />
         )}
-        {store && DataExporter && (
-          <DataExporter
+        {store && this.DataExporter && (
+          <this.DataExporter
             lastChange={store.changelog.lastChange}
             exportData={store.exportData}
+          />
+        )}
+
+        {store && this.StyleSetter && (
+          <this.StyleSetter
+            lastChange={store.changelog.lastChange}
+            styleUpdater={store.updateParams}
           />
         )}
       </div>

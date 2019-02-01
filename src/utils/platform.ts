@@ -15,5 +15,12 @@ export function getPlatform(N: Navigatorish = window.navigator): Platform {
   return ''
 }
 
+const SUPPORTS_COLOR_PICKER = (function() {
+  const inp = document.createElement('input')
+  inp.type = 'color'
+  return inp.type === 'color'
+})()
+export {SUPPORTS_COLOR_PICKER}
+
 const nativePlatform = getPlatform()
 export {nativePlatform}
