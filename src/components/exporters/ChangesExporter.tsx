@@ -5,6 +5,10 @@ import {BaseJsonExporter} from './BaseJsonExporter'
 import {ChangesExporterProps as Props} from '../../interfaces'
 
 export class ChangesExporter extends BaseJsonExporter<Props> {
+  get fileName() {
+    return 'exported-pathing-changes.json'
+  }
+
   get className() {
     return 'change-exporter'
   }

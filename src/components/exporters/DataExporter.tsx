@@ -3,6 +3,10 @@ import {BaseJsonExporter} from './BaseJsonExporter'
 import {DataExporterProps as Props} from '../../interfaces'
 
 export class DataExporter extends BaseJsonExporter<Props> {
+  get fileName() {
+    return 'exported-pathing-data.json'
+  }
+
   get className() {
     return 'data-exporter'
   }
