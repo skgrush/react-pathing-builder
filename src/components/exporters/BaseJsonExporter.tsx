@@ -4,6 +4,7 @@ import {toJSON} from '../../utils'
 
 export interface BaseState {
   dataString: string
+  showData: boolean
 }
 
 const DOWNLOAD_OPTS: BlobPropertyBag = Object.freeze({
@@ -15,7 +16,7 @@ export abstract class BaseJsonExporter<
   State extends BaseState = BaseState
 > extends React.Component<Props, State> {
   /** overloadable State default */
-  state = {dataString: ''} as State
+  state = {dataString: '', showData: true} as State
   /** react ref */
   buttonRef: React.RefObject<HTMLAnchorElement> = React.createRef()
 
@@ -44,12 +45,23 @@ export abstract class BaseJsonExporter<
     }
   }
 
-  componentDidMount() {
-    this.setState({dataString: this.getData()})
+  get replacer() {
+    if (this.state.showData) return undefined
+    return (key: string, value: any) => (key !== 'data' ? value : undefined)
   }
 
-  componentDidUpdate(prevProps: Props) {
-    if (this.props.lastChange !== prevProps.lastChange)
+  componentDidMount() {
+    this.setState({
+      dataString: this.getData(),
+      showData: true,
+    })
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (
+      this.props.lastChange !== prevProps.lastChange ||
+      prevState.showData !== this.state.showData
+    )
       this.setState({
         dataString: this.getData(),
       })
@@ -60,7 +72,7 @@ export abstract class BaseJsonExporter<
   }
 
   private stringify(value: any) {
-    return toJSON(value, this.props.space || 2)
+    return toJSON(value, this.props.space || 2, this.replacer)
   }
 
   onClickDownload = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -80,6 +92,12 @@ export abstract class BaseJsonExporter<
     }
   }
 
+  onCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({
+      showData: e.currentTarget.checked,
+    })
+  }
+
   render() {
     return (
       <div className={this.className}>
@@ -92,6 +110,14 @@ export abstract class BaseJsonExporter<
           title={this.fileName}
         />
         <a ref={this.buttonRef} hidden />
+        <label title="Uncheck to exclude the 'data' attribute">
+          <input
+            type="checkbox"
+            onChange={this.onCheckboxChange}
+            checked={this.state.showData}
+          />
+          Show Data
+        </label>
         {this.footer}
       </div>
     )

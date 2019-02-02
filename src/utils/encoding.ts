@@ -18,12 +18,17 @@ export function b64time() {
   return base64(Date.now() % 1e11)
 }
 
+type StringifyReplacer = (key: string, value: any) => any
 /**
  * Safe JSON function that returns an error string on error.
  */
-export function toJSON(data: object, space?: string | number) {
+export function toJSON(
+  data: object,
+  space?: string | number,
+  replacer?: StringifyReplacer
+) {
   try {
-    return JSON.stringify(data, undefined, space)
+    return JSON.stringify(data, replacer, space)
   } catch (e) {
     return `"${e.name}: ${e.message}"`
   }
