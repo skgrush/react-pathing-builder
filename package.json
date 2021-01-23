@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/skgrush/react-pathing-builder.git"
   },
-  "author": "Samuel K. Grush",
+  "author": "Samuel K. Grush <Samuel@Grush.org>",
   "license": "MIT",
   "files": [
     "lib/**/*"
