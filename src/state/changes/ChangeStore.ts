@@ -250,7 +250,7 @@ export default class ChangeStore {
 
     this.canvasStore.redraw()
     if (C instanceof ChangeMutateLoc) {
-      C.target[C.property] = C.oldValue
+      C.target[C.property] = C.oldValue as any
       return true
     } else if (C instanceof ChangeMutateEdge) {
       C.target[C.property] = C.oldValue

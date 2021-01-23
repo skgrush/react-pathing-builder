@@ -54,13 +54,12 @@ export class ShapeSelect extends React.Component<Props, State> {
     this.selectRef = React.createRef()
   }
 
-  componentDidUpdate(prevProps: NaughtyProps) {
-    const {value, defaultValue} = this.props as NaughtyProps
-    if (
-      (value && value !== this.state.value) ||
-      (!value && defaultValue !== prevProps.defaultValue)
-    ) {
+  componentDidUpdate(prevProps: Props) {
+    const {value, defaultValue} = this.props as Props
+    if (value && value !== this.state.value) {
       this.setState({value})
+    } else if (!value && defaultValue !== prevProps.defaultValue) {
+      this.setState({ value: defaultValue ?? '' })
     }
   }
 

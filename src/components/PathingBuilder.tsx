@@ -217,7 +217,6 @@ class PathingBuilder extends React.Component<Props, State> {
     propName: K,
     default_: React.ComponentClass<P>
   ): C | React.ComponentClass<P> | null => {
-    if (propName === 'children') return null
     const propValue = this.props[propName]
     if (propValue === undefined) {
       return default_

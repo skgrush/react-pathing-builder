@@ -557,7 +557,7 @@ export default class CanvasStore {
     this.canvas.addEventListener('keydown', this.keyDownHandler, true)
     // re/set the drawing interval
     if (this.intervalID) clearInterval(this.intervalID)
-    this.intervalID = setInterval(this.draw, this.refreshInterval)
+    this.intervalID = setInterval(this.draw, this.refreshInterval) as any
     this.valid = false
   }
 
